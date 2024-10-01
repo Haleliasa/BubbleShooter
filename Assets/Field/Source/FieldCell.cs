@@ -1,22 +1,25 @@
 using UnityEngine;
 
 namespace Field {
-    public class FieldCell : MonoBehaviour, IFieldCell {
+    public sealed class FieldCell : MonoBehaviour, IFieldCell {
         private Field field;
-
-        public Vector2Int Coords { get; private set; }
 
         public IFieldObject Object { get; private set; }
 
-        public void Init(Vector2Int coords, IFieldObject obj, Field field) {
-            Coords = coords;
+        public Vector2Int Coords { get; private set; }
+
+        public Color Color { get; private set; }
+
+        public void Init(Field field, IFieldObject obj, Vector2Int coords, Color color) {
+            this.field = field;
             Object = obj;
             Object.Init(transform);
-            this.field = field;
+            Coords = coords;
+            Color = color;
         }
 
-        void IFieldCell.Hit(IFieldObject obj, bool destroy) {
-            this.field.Hit(this, destroy);
+        void IFieldCell.Hit(IFieldObject obj, Color color, Vector2 position, bool destroy) {
+            this.field.Hit(this, obj, color, position, destroy);
         }
     }
 }
