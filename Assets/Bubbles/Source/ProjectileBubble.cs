@@ -27,11 +27,10 @@ namespace Bubbles {
             if (this.projectile == null) {
                 this.projectile = GetComponent<Projectile>();
             }
-            this.projectile.enabled = true;
         }
 
         void IFieldObject.Init(Transform position) {
-            this.projectile.enabled = false;
+            this.projectile.Stop();
             transform.SetParent(position, worldPositionStays: true);
             this.attachPath = (this.bubble.Position, position.position);
             this.attachTime = 0f;
@@ -44,14 +43,10 @@ namespace Bubbles {
 
         private void FixedUpdate() {
             if (this.attachPath.HasValue) {
-                this.attachTime += Time.fixedDeltaTime;
                 (Vector2 from, Vector2 to) = this.attachPath.Value;
-                if (this.attachTime < this.fieldAttachDuration) {
-                    this.bubble.Move(
-                        Vector2.Lerp(from, to, this.attachTime / this.fieldAttachDuration));
-                } else {
+                Attach(from, to, ref this.attachTime, Time.fixedDeltaTime, out bool finished);
+                if (finished) {
                     this.attachPath = null;
-                    this.bubble.Pin(to);
                 }
             }
         }
@@ -65,11 +60,27 @@ namespace Bubbles {
         }
 
         private void HitFieldCell(GameObject obj) {
-            if (!this.projectile.enabled) {
+            if (!this.projectile.IsMoving) {
                 return;
             }
             IFieldCell? cell = obj.GetComponentInChildren<IFieldCell>();
             cell?.Hit(this, this.bubble.Color, this.bubble.Position, destroy: false);
+        }
+
+        private void Attach(
+            Vector2 from,
+            Vector2 to,
+            ref float time,
+            float deltaTime,
+            out bool finished) {
+            time += deltaTime;
+            if (time < this.fieldAttachDuration) {
+                this.bubble.Move(Vector2.Lerp(from, to, time / this.fieldAttachDuration));
+                finished = false;
+            } else {
+                this.bubble.Pin(to);
+                finished = true;
+            }
         }
     }
 }

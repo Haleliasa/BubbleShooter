@@ -45,6 +45,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cellPrefab: {fileID: 8486936116847359952, guid: bb933360d0089a34489db4aba27f7fc7, type: 3}
-  maxSize: {x: 10, y: 20}
+  maxSize: {x: 10, y: 10}
   cellRadius: 0.5
   cellSpacing: 0.1

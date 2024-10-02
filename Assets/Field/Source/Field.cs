@@ -71,6 +71,17 @@ namespace Field {
             // TODO: add color matching here
         }
 
+        private void OnDrawGizmos() {
+            (float interval, float xStart) = GetIntervalAndXStart();
+            for (int y = 0; y < this.maxSize.y; y++) {
+                for (int x = 0; x < this.maxSize.x; x++) {
+                    Gizmos.DrawSphere(
+                        GetPosition(new Vector2Int(x, y), interval, xStart),
+                        this.cellRadius);
+                }
+            }
+        }
+
         private void CreateCell(FieldObjectInfo objInfo, float interval, float xStart) {
             FieldCell cell = Instantiate(this.cellPrefab, transform);
             cell.transform.position = GetPosition(objInfo.coords, interval, xStart);
@@ -84,8 +95,8 @@ namespace Field {
         }
 
         private IEnumerable<Vector2Int> GetFreeAdjacentCoords(Vector2Int coords) {
-            for (int dx = -1; dx <= 1; dx++) {
-                for (int dy = -1; dy <= 1; dy++) {
+            for (int dy = -1; dy <= 1; dy++) {
+                for (int dx = -1; dx <= 1; dx++) {
                     if (dx == 0 && dy == 0) {
                         continue;
                     }

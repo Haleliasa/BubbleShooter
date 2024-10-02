@@ -63,7 +63,7 @@ namespace Bubbles {
         }
 
         private void PopIfFloor(GameObject obj) {
-            if (((1 << obj.layer) & this.floorLayers) != 0) {
+            if (obj.CheckLayer(this.floorLayers)) {
                 Pop();
             }
         }
