@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 803476413568625576}
   - component: {fileID: 8486936116847359952}
   - component: {fileID: 228415896813236266}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: FieldCell
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -79,4 +79,4 @@ CircleCollider2D:
   m_UsedByComposite: 0
   m_Offset: {x: 0, y: 0}
   serializedVersion: 2
-  m_Radius: 0.5
+  m_Radius: 0.4

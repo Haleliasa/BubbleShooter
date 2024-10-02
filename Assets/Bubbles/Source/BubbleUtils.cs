@@ -1,16 +1,21 @@
 ﻿using Field;
-using System.Collections;
+using UnityEngine;
 
 namespace Bubbles {
     public static class BubbleUtils {
-        public static IEnumerator Destroy(this Bubble bubble, FieldObjectDestroyType type) {
+        public static void Destroy(this Bubble bubble, FieldObjectDestroyType type) {
+            if (type == FieldObjectDestroyType.Dispose) {
+                Object.Destroy(bubble.gameObject);
+                return;
+            }
+            bubble.transform.SetParent(null, worldPositionStays: true);
             switch (type) {
                 case FieldObjectDestroyType.Normal:
-                    yield return bubble.Pop();
+                    bubble.Pop();
                     break;
 
                 case FieldObjectDestroyType.Detach:
-                    yield return bubble.Fall();
+                    bubble.Fall();
                     break;
             }
         }

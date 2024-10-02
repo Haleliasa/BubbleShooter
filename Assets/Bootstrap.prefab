@@ -45,4 +45,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   field: {fileID: 0}
-  bubblePrefab: {fileID: -7273503467626982961, guid: 3820cf6e2bd406e4d983e7e71928e81d, type: 3}
+  staticBubblePrefab: {fileID: -7273503467626982961, guid: 3820cf6e2bd406e4d983e7e71928e81d, type: 3}
+  projectileBubblePrefab: {fileID: -3517855862807720405, guid: ca96cb8ee78606c4ea7723a60920f743, type: 3}
