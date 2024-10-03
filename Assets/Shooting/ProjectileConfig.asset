@@ -15,7 +15,8 @@ MonoBehaviour:
   minSpeed: 10
   maxSpeed: 20
   minGravity: 0
-  maxGravity: 5
+  maxGravity: 10
   wallLayers:
     serializedVersion: 2
     m_Bits: 256
+  maxPowerSpreadArc: 10

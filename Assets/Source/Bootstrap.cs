@@ -10,10 +10,16 @@ public class Bootstrap : MonoBehaviour {
     private Field.Field field;
 
     [SerializeField]
+    private Slingshot slingshot;
+
+    [SerializeField]
     private StaticBubble staticBubblePrefab;
 
     [SerializeField]
     private ProjectileBubble projectileBubblePrefab;
+
+    [SerializeField]
+    private Transform projectilePosition;
 
     [SerializeField]
     private LayerMask targetLayers;
@@ -24,35 +30,72 @@ public class Bootstrap : MonoBehaviour {
     [SerializeField]
     private LineRenderer altTrajectory;
 
+    private Projectile projectile;
+    private readonly List<Vector2> trajectoryBuffer = new();
+
     private void Start() {
         this.field.Init(GenerateBubbles());
-        Invoke(nameof(LaunchProjectile), 0.1f);
-    }
 
-    private void LaunchProjectile() {
         ProjectileBubble projBubble = Instantiate(
             this.projectileBubblePrefab,
-            new Vector2(0f, -8f),
+            this.projectilePosition.position,
             Quaternion.identity);
         projBubble.Init(Color.green);
-        Projectile proj = projBubble.GetComponent<Projectile>();
-        Vector2 dir = new(0.8f, 0.45f);
-        float power = 0.5f;
-        List<Vector2> traj = new();
-        proj.GetTrajectory(
-            dir,
-            power,
+        this.projectile = projBubble.GetComponent<Projectile>();
+
+        this.slingshot.Shoot += OnSlingshotShoot;
+    }
+
+    private void Update() {
+        DrawProjectileTrajectory();
+    }
+
+    private void OnDestroy() {
+        this.slingshot.Shoot -= OnSlingshotShoot;
+    }
+
+    private void DrawProjectileTrajectory() {
+        if (Mathf.Approximately(this.slingshot.Distance, 0f)) {
+            this.trajectory.positionCount = 0;
+            this.altTrajectory.positionCount = 0;
+            return;
+        }
+
+        this.projectile.GetTrajectory(
+            this.slingshot.Direction,
+            this.slingshot.Distance,
             this.targetLayers,
             0.02f,
-            100f,
-            traj,
+            5f,
+            this.trajectoryBuffer,
             out int len,
             out int altLen);
+
         this.trajectory.positionCount = len;
-        this.trajectory.SetPositions(traj.Take(len).Select(p => (Vector3)p).ToArray());
-        this.altTrajectory.positionCount = altLen;
-        this.altTrajectory.SetPositions(traj.Skip(len).Take(altLen).Select(p => (Vector3)p).ToArray());
-        proj.Launch(dir, power);
+        this.trajectory.SetPositions(
+            this.trajectoryBuffer.Take(len).Select(p => (Vector3)p).ToArray());
+
+        if (altLen > 0) {
+            this.trajectory.startColor =
+                this.trajectory.endColor =
+                this.altTrajectory.startColor =
+                this.altTrajectory.endColor =
+                Color.red;
+            this.altTrajectory.positionCount = altLen;
+            this.altTrajectory.SetPositions(
+                this.trajectoryBuffer.Skip(len).Take(altLen).Select(p => (Vector3)p).ToArray());
+        } else {
+            this.trajectory.startColor =
+                this.trajectory.endColor =
+                Color.black;
+            this.altTrajectory.positionCount = 0;
+        }
+
+        this.trajectoryBuffer.Clear();
+    }
+
+    private void OnSlingshotShoot(Slingshot.EventData data) {
+        this.projectile.Launch(data.direction, data.distance);
     }
 
     private IEnumerable<FieldObjectInfo> GenerateBubbles() {

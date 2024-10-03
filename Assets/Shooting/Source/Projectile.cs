@@ -28,6 +28,8 @@ namespace Shooting {
             ? this.rigidbody.position
             : (Vector2)transform.position;
 
+        public float Power { get; private set; }
+
         public void GetTrajectory(
             Vector2 dir,
             float power,
@@ -73,12 +75,12 @@ namespace Shooting {
 
         public void Launch(Vector2 dir, float power) {
             this.dir = dir.normalized;
-            power = Mathf.Clamp01(power);
-            if (Mathf.Approximately(power, 1f)) {
+            Power = Mathf.Clamp01(power);
+            if (Mathf.Approximately(Power, 1f)) {
                 float spreadHalf = this.config.MaxPowerSpreadArc / 2f;
                 this.dir = this.dir.Value.Rotate(Random.Range(-spreadHalf, spreadHalf));
             }
-            (this.speed, this.gravity) = GetSpeedAndGravity(power);
+            (this.speed, this.gravity) = GetSpeedAndGravity(Power);
             this.gravitySpeed = 0f;
         }
 

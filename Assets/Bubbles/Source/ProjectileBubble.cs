@@ -64,7 +64,11 @@ namespace Bubbles {
                 return;
             }
             IFieldCell? cell = obj.GetComponentInChildren<IFieldCell>();
-            cell?.Hit(this, this.bubble.Color, this.bubble.Position, destroy: false);
+            cell?.Hit(
+                this,
+                this.bubble.Color,
+                this.bubble.Position,
+                destroy: Mathf.Approximately(this.projectile.Power, 1f));
         }
 
         private void Attach(
