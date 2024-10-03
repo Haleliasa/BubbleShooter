@@ -19,22 +19,39 @@ public class Bootstrap : MonoBehaviour {
     private LayerMask targetLayers;
 
     [SerializeField]
-    private LineRenderer trajectoryRenderer;
+    private LineRenderer trajectory;
+
+    [SerializeField]
+    private LineRenderer altTrajectory;
 
     private void Start() {
-        //this.field.Init(GenerateBubbles());
+        this.field.Init(GenerateBubbles());
+        Invoke(nameof(LaunchProjectile), 0.1f);
+    }
+
+    private void LaunchProjectile() {
         ProjectileBubble projBubble = Instantiate(
             this.projectileBubblePrefab,
             new Vector2(0f, -8f),
             Quaternion.identity);
         projBubble.Init(Color.green);
         Projectile proj = projBubble.GetComponent<Projectile>();
-        Vector2 dir = new(-0.5f, 0.4f);
-        float power = 0.4f;
+        Vector2 dir = new(0.8f, 0.45f);
+        float power = 0.5f;
         List<Vector2> traj = new();
-        proj.GetTrajectory(dir, power, this.targetLayers, 0.02f, 100f, traj, out _, out _);
-        this.trajectoryRenderer.positionCount = traj.Count;
-        this.trajectoryRenderer.SetPositions(traj.Select(p => (Vector3)p).ToArray());
+        proj.GetTrajectory(
+            dir,
+            power,
+            this.targetLayers,
+            0.02f,
+            100f,
+            traj,
+            out int len,
+            out int altLen);
+        this.trajectory.positionCount = len;
+        this.trajectory.SetPositions(traj.Take(len).Select(p => (Vector3)p).ToArray());
+        this.altTrajectory.positionCount = altLen;
+        this.altTrajectory.SetPositions(traj.Skip(len).Take(altLen).Select(p => (Vector3)p).ToArray());
         proj.Launch(dir, power);
     }
 

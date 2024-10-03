@@ -28,6 +28,11 @@ namespace Shooting {
         [SerializeField]
         private LayerMask wallLayers;
 
+        [Tooltip("deg")]
+        [Range(0f, 180f)]
+        [SerializeField]
+        private float maxPowerSpreadArc = 10f;
+
         public float MinSpeed => this.minSpeed;
 
         public float MaxSpeed => this.maxSpeed;
@@ -37,5 +42,7 @@ namespace Shooting {
         public float MaxGravity => this.maxGravity;
 
         public LayerMask WallLayers => this.wallLayers;
+
+        public float MaxPowerSpreadArc => this.maxPowerSpreadArc;
     }
 }

@@ -12,12 +12,21 @@ namespace Shooting {
         [SerializeField]
         private new Rigidbody2D? rigidbody;
 
+        [SerializeField]
+        private float radius = 0.5f;
+
         private Vector2? dir;
         private float speed;
         private float gravitySpeed;
         private float gravity;
+        private readonly List<RaycastHit2D> hitBuffer = new(2);
 
         public bool IsMoving => this.dir.HasValue;
+
+        public Vector2 Position =>
+            this.rigidbody != null
+            ? this.rigidbody.position
+            : (Vector2)transform.position;
 
         public void GetTrajectory(
             Vector2 dir,
@@ -27,44 +36,50 @@ namespace Shooting {
             float maxTime,
             List<Vector2> result,
             out int length,
-            out int alternativeLength) {
+            out int altLength) {
             dir.Normalize();
             power = Mathf.Clamp01(power);
             if (Mathf.Approximately(power, 1f)) {
-                Vector2 dir1 = dir;
-                Vector2 dir2 = dir;
+                float spreadHalf = this.config.MaxPowerSpreadArc / 2f;
                 length = GetTrajectoryInternal(
-                    dir1 * this.config.MaxSpeed,
+                    dir.Rotate(spreadHalf),
+                    this.config.MaxSpeed,
                     this.config.MinGravity,
                     targetLayers,
                     timeStep,
                     maxTime,
                     result);
-                alternativeLength = GetTrajectoryInternal(
-                    dir2 * this.config.MinSpeed,
-                    this.config.MaxGravity,
+                altLength = GetTrajectoryInternal(
+                    dir.Rotate(-spreadHalf),
+                    this.config.MaxSpeed,
+                    this.config.MinGravity,
                     targetLayers,
                     timeStep,
                     maxTime,
                     result);
             } else {
+                (float speed, float gravity) = GetSpeedAndGravity(power);
                 length = GetTrajectoryInternal(
-                    dir * Mathf.Lerp(this.config.MinSpeed, this.config.MaxSpeed, power),
-                    Mathf.Lerp(this.config.MaxGravity, this.config.MinGravity, power),
+                    dir,
+                    speed,
+                    gravity,
                     targetLayers,
                     timeStep,
                     maxTime,
                     result);
-                alternativeLength = 0;
+                altLength = 0;
             }
         }
 
         public void Launch(Vector2 dir, float power) {
             this.dir = dir.normalized;
             power = Mathf.Clamp01(power);
-            this.speed = Mathf.Lerp(this.config.MinSpeed, this.config.MaxSpeed, power);
+            if (Mathf.Approximately(power, 1f)) {
+                float spreadHalf = this.config.MaxPowerSpreadArc / 2f;
+                this.dir = this.dir.Value.Rotate(Random.Range(-spreadHalf, spreadHalf));
+            }
+            (this.speed, this.gravity) = GetSpeedAndGravity(power);
             this.gravitySpeed = 0f;
-            this.gravity = Mathf.Lerp(this.config.MaxGravity, this.config.MinGravity, power);
         }
 
         public void Stop() {
@@ -73,24 +88,31 @@ namespace Shooting {
 
         private void FixedUpdate() {
             if (this.dir.HasValue) {
+                Vector2 dir = this.dir.Value;
                 Move(
-                    this.dir.Value * this.speed,
+                    ref dir,
+                    this.speed,
                     ref this.gravitySpeed,
                     this.gravity,
                     Time.fixedDeltaTime);
+                this.dir = dir;
             }
         }
 
-        private void OnCollisionEnter2D(Collision2D collision) {
-            ReflectFromWall(collision);
-        }
-
         private void Move(
-            Vector2 velocity,
+            ref Vector2 dir,
+            float speed,
             ref float gravitySpeed,
             float gravity,
             float deltaTime) {
-            Vector2 movement = GetMovement(velocity, ref gravitySpeed, gravity, deltaTime);
+            Vector2 movement = GetMovement(
+                Position,
+                ref dir,
+                speed,
+                ref gravitySpeed,
+                gravity,
+                deltaTime,
+                out _);
             if (this.rigidbody != null) {
                 this.rigidbody.MovePosition(this.rigidbody.position + movement);
             } else {
@@ -99,65 +121,96 @@ namespace Shooting {
         }
 
         private int GetTrajectoryInternal(
-            Vector2 velocity,
+            Vector2 dir,
+            float speed,
             float gravity,
             LayerMask targetLayers,
             float timeStep,
             float maxTime,
             List<Vector2> result) {
-            Vector2 from =
-                this.rigidbody != null
-                ? this.rigidbody.position
-                : (Vector2)transform.position;
+            Vector2 pos = Position;
             int startCount = result.Count;
-            result.Add(from);
+            result.Add(pos);
             float time = 0f;
             float gravitySpeed = 0f;
-            RaycastHit2D hit;
-            ContactFilter2D contactFilter = new() { useTriggers = true };
-            contactFilter.SetLayerMask(targetLayers | this.config.WallLayers);
-            List<RaycastHit2D> hits = new();
+            bool reachedTarget;
             do {
+                pos += GetMovement(
+                    pos,
+                    ref dir,
+                    speed,
+                    ref gravitySpeed,
+                    gravity,
+                    timeStep,
+                    out reachedTarget,
+                    targetLayers: targetLayers);
+                result.Add(pos);
                 time += timeStep;
-                Vector2 to = from + GetMovement(velocity, ref gravitySpeed, gravity, timeStep);
-                int hitCount = Physics2D.Linecast(from, to, contactFilter, hits);
-                hit = hits
-                    .Take(hitCount)
-                    .Where(h => h.collider.gameObject != gameObject)
-                    .OrderBy(h => h.distance)
-                    .FirstOrDefault();
-                if (hit.collider != null) {
-                    result.Add(hit.point);
-                    if (hit.collider.CheckLayer(this.config.WallLayers)) {
-                        velocity = Vector2.Reflect(velocity, hit.normal);
-                        from = hit.point + GetMovement(velocity, ref gravitySpeed, gravity, 1e-6f);
-                    }
-                } else {
-                    from = to;
-                    result.Add(from);
-                }
-                hits.Clear();
             }
-            while (time < maxTime
-                && (hit.collider == null
-                    || !hit.collider.CheckLayer(targetLayers)));
+            while (time < maxTime && !reachedTarget);
             return result.Count - startCount;
         }
 
         private Vector2 GetMovement(
-            Vector2 velocity,
+            Vector2 from,
+            ref Vector2 dir,
+            float speed,
             ref float gravitySpeed,
             float gravity,
-            float deltaTime) {
-            gravitySpeed += gravity * deltaTime;
-            return (velocity + new Vector2(0f, -gravitySpeed)) * deltaTime;
+            float deltaTime,
+            out bool reachedTarget,
+            LayerMask? targetLayers = null) {
+            reachedTarget = false;
+
+            float deltaTimeHalf = deltaTime / 2f;
+            gravitySpeed += gravity * deltaTimeHalf;
+            Vector2 movement = ((dir * speed) + new Vector2(0f, -gravitySpeed)) * deltaTime;
+            gravitySpeed += gravity * deltaTimeHalf;
+            float dist = movement.magnitude;
+
+            if (Mathf.Approximately(dist, 0f)) {
+                return Vector2.zero;
+            }
+
+            Vector2 finalDir = movement / dist;
+
+            int layers = this.config.WallLayers;
+            if (targetLayers.HasValue) {
+                layers |= targetLayers.Value;
+            }
+            ContactFilter2D contactFilter = new() { useTriggers = true };
+            contactFilter.SetLayerMask(layers);
+            int hits = Physics2D.CircleCast(
+                from,
+                this.radius,
+                finalDir,
+                contactFilter,
+                this.hitBuffer,
+                distance: dist);
+            RaycastHit2D hit = this.hitBuffer
+                .Take(hits)
+                .Where(h => h.collider.gameObject != gameObject)
+                .OrderBy(h => h.distance)
+                .FirstOrDefault();
+            this.hitBuffer.Clear();
+
+            if (hit.collider == null) {
+                return movement;
+            }
+
+            movement = finalDir * hit.distance;
+            if (hit.collider.CheckLayer(this.config.WallLayers)) {
+                movement += Vector2.Reflect(finalDir, hit.normal) * (dist - hit.distance);
+                dir = Vector2.Reflect(dir, hit.normal);
+            } else {
+                reachedTarget = true;
+            }
+            return movement;
         }
 
-        private void ReflectFromWall(Collision2D collision) {
-            if (this.dir.HasValue
-                && collision.gameObject.CheckLayer(this.config.WallLayers)) {
-                this.dir = Vector2.Reflect(this.dir.Value, collision.GetContact(0).normal);
-            }
+        private (float, float) GetSpeedAndGravity(float power) {
+            return (Mathf.Lerp(this.config.MinSpeed, this.config.MaxSpeed, power),
+                Mathf.Lerp(this.config.MaxGravity, this.config.MinGravity, power));
         }
     }
 }
