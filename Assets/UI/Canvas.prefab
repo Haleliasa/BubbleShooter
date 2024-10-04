@@ -222,9 +222,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2dee96bc3846bfd409a9b2d0b213979e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  sizeRef: {fileID: 2586400922679990497}
+  container: {fileID: 2586400922679990497}
+  line: {fileID: 0}
+  camera: {fileID: 0}
   minDistance: 0.01
-  maxDistance: 0.15
+  maxDistance: 0.1
 --- !u!114 &2335310370210803329
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -487,7 +489,7 @@ Canvas:
   m_GameObject: {fileID: 8628387286770493647}
   m_Enabled: 1
   serializedVersion: 3
-  m_RenderMode: 0
+  m_RenderMode: 1
   m_Camera: {fileID: 0}
   m_PlaneDistance: 100
   m_PixelPerfect: 0

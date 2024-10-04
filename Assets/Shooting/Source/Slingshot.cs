@@ -5,7 +5,13 @@ using UnityEngine.EventSystems;
 namespace Shooting {
     public class Slingshot : MonoBehaviour, IDragHandler, IEndDragHandler {
         [SerializeField]
-        private RectTransform sizeRef;
+        private RectTransform container;
+
+        [SerializeField]
+        private LineRenderer line;
+
+        [SerializeField]
+        private new Camera camera;
 
         [Range(0f, 1f)]
         [SerializeField]
@@ -46,21 +52,33 @@ namespace Shooting {
                 return;
             }
 
-            float relativeDist = dist
-                / Mathf.Max(this.sizeRef.rect.width, this.sizeRef.rect.height);
+            float size = Mathf.Max(this.container.rect.width, this.container.rect.height);
+            float relativeDist = dist / size;
 
             if (relativeDist < this.minDistance) {
                 ResetData();
                 return;
             }
 
+            relativeDist = Mathf.Min(relativeDist, this.maxDistance);
             Direction = -dir / dist;
-            Distance = Mathf.Lerp(0f, 1f, relativeDist / this.maxDistance);
+            Distance = relativeDist / this.maxDistance;
+            
+            this.line.positionCount = 2;
+            this.line.SetPosition(0, ToWorld(start));
+            this.line.SetPosition(1, ToWorld(start - (Direction * (relativeDist * size))));
         }
 
         private void ResetData() {
             Direction = Vector2.zero;
             Distance = 0f;
+            this.line.positionCount = 0;
+        }
+
+        private Vector3 ToWorld(Vector3 position) {
+            position = this.camera.ScreenToWorldPoint(position);
+            position.z = 0f;
+            return position;
         }
 
         public readonly struct EventData {
