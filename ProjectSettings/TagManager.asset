@@ -41,3 +41,9 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: Bubble
+    uniqueID: 3009784895
+    locked: 0
+  - name: Trajectory
+    uniqueID: 790629133
+    locked: 0

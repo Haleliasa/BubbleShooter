@@ -14,9 +14,10 @@ namespace Bubbles {
         private float fieldAttachDuration = 0.1f;
 
         private Bubble bubble = null!;
-        private Projectile projectile = null!;
         private (Vector2, Vector2)? attachPath;
         private float attachTime;
+
+        public Projectile Projectile { get; private set; } = null!;
 
         public void Init(Color color) {
             if (this.bubble == null) {
@@ -24,13 +25,13 @@ namespace Bubbles {
             }
             this.bubble.Init(color);
 
-            if (this.projectile == null) {
-                this.projectile = GetComponent<Projectile>();
+            if (Projectile == null) {
+                Projectile = GetComponent<Projectile>();
             }
         }
 
         void IFieldObject.Init(Transform position) {
-            this.projectile.Stop();
+            Projectile.Stop();
             transform.SetParent(position, worldPositionStays: true);
             this.attachPath = (this.bubble.Position, position.position);
             this.attachTime = 0f;
@@ -60,7 +61,7 @@ namespace Bubbles {
         }
 
         private void HitFieldCell(GameObject obj) {
-            if (!this.projectile.IsMoving) {
+            if (!Projectile.IsMoving) {
                 return;
             }
             IFieldCell? cell = obj.GetComponentInChildren<IFieldCell>();
@@ -68,7 +69,7 @@ namespace Bubbles {
                 this,
                 this.bubble.Color,
                 this.bubble.Position,
-                destroy: Mathf.Approximately(this.projectile.Power, 1f));
+                destroy: Mathf.Approximately(Projectile.Power, 1f));
         }
 
         private void Attach(

@@ -1,5 +1,6 @@
 #nullable enable
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -29,6 +30,8 @@ namespace Shooting {
             : (Vector2)transform.position;
 
         public float Power { get; private set; }
+
+        public event Action<Projectile>? Stopped;
 
         public void GetTrajectory(
             Vector2 dir,
@@ -78,7 +81,8 @@ namespace Shooting {
             Power = Mathf.Clamp01(power);
             if (Mathf.Approximately(Power, 1f)) {
                 float spreadHalf = this.config.MaxPowerSpreadArc / 2f;
-                this.dir = this.dir.Value.Rotate(Random.Range(-spreadHalf, spreadHalf));
+                this.dir = this.dir.Value.Rotate(
+                    UnityEngine.Random.Range(-spreadHalf, spreadHalf));
             }
             (this.speed, this.gravity) = GetSpeedAndGravity(Power);
             this.gravitySpeed = 0f;
@@ -86,6 +90,7 @@ namespace Shooting {
 
         public void Stop() {
             this.dir = null;
+            Stopped?.Invoke(this);
         }
 
         private void FixedUpdate() {
@@ -99,6 +104,10 @@ namespace Shooting {
                     Time.fixedDeltaTime);
                 this.dir = dir;
             }
+        }
+
+        private void OnDisable() {
+            Stop();
         }
 
         private void Move(

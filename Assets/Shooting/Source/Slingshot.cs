@@ -31,7 +31,7 @@ namespace Shooting {
             UpdateData(eventData.pressPosition, eventData.position);
         }
 
-        public void OnEndDrag(PointerEventData eventData) {
+        void IEndDragHandler.OnEndDrag(PointerEventData eventData) {
             UpdateData(eventData.pressPosition, eventData.position);
             if (Distance > 0f) {
                 Shoot?.Invoke(new EventData(this, Direction, Distance));
