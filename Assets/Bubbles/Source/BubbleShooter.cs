@@ -16,8 +16,12 @@ namespace Bubbles {
         private Slingshot slingshot = null!;
 
         [SerializeField]
-        private LayerMask targetLayers;
+        private SpriteRenderer projectilePreview = null!;
 
+        [SerializeField]
+        private TMP_Text shotCountText = null!;
+
+        [Header("Trajectory")]
         [SerializeField]
         private LineRenderer trajectory = null!;
 
@@ -25,16 +29,19 @@ namespace Bubbles {
         private LineRenderer altTrajectory = null!;
 
         [SerializeField]
+        private LayerMask targetLayers;
+
+        [SerializeField]
+        private float trajectoryTimeStep = 0.02f;
+
+        [SerializeField]
+        private float maxTrajectoryTime = 5f;
+
+        [SerializeField]
         private Color trajectoryColor;
 
         [SerializeField]
         private Color altTrajectoryColor;
-
-        [SerializeField]
-        private SpriteRenderer projectilePreview = null!;
-
-        [SerializeField]
-        private TMP_Text shotCountText = null!;
 
         private readonly List<Color> colors = new();
         private int shotCount;
@@ -58,7 +65,7 @@ namespace Bubbles {
         }
 
         private void Update() {
-            DrawProjectileTrajectory();
+            UpdateProjectileTrajectory();
         }
 
         private void PrepareProjectile() {
@@ -102,7 +109,7 @@ namespace Bubbles {
             PrepareProjectile();
         }
 
-        private void DrawProjectileTrajectory() {
+        private void UpdateProjectileTrajectory() {
             if (this.preparedProjectile == null
                 || Mathf.Approximately(this.slingshot.Distance, 0f)) {
                 this.trajectory.positionCount = 0;
@@ -114,8 +121,8 @@ namespace Bubbles {
                 this.slingshot.Direction,
                 this.slingshot.Distance,
                 this.targetLayers,
-                0.02f,
-                5f,
+                this.trajectoryTimeStep,
+                this.maxTrajectoryTime,
                 this.trajectoryBuffer,
                 out int len,
                 out int altLen);

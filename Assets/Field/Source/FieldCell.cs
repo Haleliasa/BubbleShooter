@@ -18,6 +18,13 @@ namespace Field {
             Color = color;
         }
 
+        public void DetachObject(FieldObjectDestroyType? destroy) {
+            Object.Detach();
+            if (destroy.HasValue) {
+                Object.Destroy(destroy.Value);
+            }
+        }
+
         void IFieldCell.Hit(IFieldObject obj, Color color, Vector2 position, bool destroy) {
             this.field.Hit(this, obj, color, position, destroy);
         }

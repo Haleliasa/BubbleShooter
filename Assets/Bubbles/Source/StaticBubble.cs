@@ -18,6 +18,10 @@ namespace Bubbles {
             this.bubble.Pin(position.position);
         }
 
+        void IFieldObject.Detach() {
+            this.bubble.transform.SetParent(null, worldPositionStays: true);
+        }
+
         void IFieldObject.Destroy(FieldObjectDestroyType type) {
             this.bubble.Destroy(type);
         }

@@ -37,6 +37,10 @@ namespace Bubbles {
             this.attachTime = 0f;
         }
 
+        void IFieldObject.Detach() {
+            this.bubble.transform.SetParent(null, worldPositionStays: true);
+        }
+
         void IFieldObject.Destroy(FieldObjectDestroyType type) {
             this.attachPath = null;
             this.bubble.Destroy(type);

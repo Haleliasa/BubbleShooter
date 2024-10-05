@@ -46,12 +46,16 @@ namespace Bubbles {
         }
 
         public void Pop() {
-            Destroy(gameObject);
+            Destroy();
         }
 
         public void Fall() {
             this.rigidbody.isKinematic = false;
             this.springJoint.enabled = false;
+        }
+
+        public void Destroy() {
+            Destroy(gameObject);
         }
 
         private void OnCollisionEnter2D(Collision2D collision) {

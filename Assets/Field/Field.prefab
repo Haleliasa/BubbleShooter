@@ -48,3 +48,6 @@ MonoBehaviour:
   maxSize: {x: 10, y: 10}
   cellRadius: 0.5
   cellSpacing: 0.1
+  minMatch: 3
+  topRowWinFraction: 0.3
+  objectDestroyDelay: 0.1

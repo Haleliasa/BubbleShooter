@@ -1,7 +1,7 @@
 ﻿namespace Field {
     public enum FieldObjectDestroyType {
         Normal = 0,
-        Detach = 1,
+        Isolated = 1,
         Dispose = 2,
     }
 }
