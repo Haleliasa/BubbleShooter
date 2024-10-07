@@ -74,10 +74,9 @@ namespace Bubbles {
                 return;
             }
 
-            ProjectileBubble projectile = Instantiate(
-                this.projectilePrefab,
-                transform.position,
-                Quaternion.identity);
+            ProjectileBubble projectile = Instantiate(this.projectilePrefab);
+            projectile.transform.SetParent(transform);
+            projectile.transform.localPosition = Vector3.zero;
             projectile.Init(this.nextColor);
             this.preparedProjectile = projectile.Projectile;
             this.nextColor = this.colors[UnityEngine.Random.Range(0, this.colors.Count)];

@@ -39,16 +39,15 @@ namespace Field {
         private float objectDestroyDelay = 0.1f;
 
         private FieldCell?[,] cells = null!;
-        private int cellCount;
         private int topRowCellCount;
         private int topRowWinCellCount;
-        private readonly Queue<FieldCell> bfsQueue = new();
-        private bool[,] bfsVisited = null!;
         private readonly List<FieldCell> match = new();
         private readonly List<FieldCell> matchAdjacent = new();
         private readonly List<FieldCell> isolatedBuffer = new();
         private readonly List<FieldCell> isolated = new();
         private readonly List<(IFieldObject, FieldObjectDestroyType)> toDestroy = new();
+        private readonly Queue<FieldCell> bfsQueue = new();
+        private bool[,] bfsVisited = null!;
 
         public void Init(IEnumerable<FieldObjectInfo> objects) {
             this.cells ??= new FieldCell[this.maxSize.y, this.maxSize.x];
@@ -61,10 +60,8 @@ namespace Field {
 
             (float interval, float xStart) = GetIntervalAndXStart();
             this.topRowCellCount = 0;
-            foreach (FieldObjectInfo objInfo in objects
-                .Where(o => o.coords.x >= 0 && o.coords.x < this.maxSize.x
-                    && o.coords.y >= 0 && o.coords.y < this.maxSize.y)) {
-                CreateCell(objInfo, interval, xStart);
+            foreach (FieldObjectInfo objInfo in objects) {
+                CreateCell(objInfo.obj, objInfo.coords, objInfo.color, interval, xStart);
             }
             this.topRowWinCellCount = Mathf.FloorToInt(
                 this.topRowCellCount * this.topRowWinFraction);
@@ -78,6 +75,7 @@ namespace Field {
             bool destroy) {
             (float interval, float xStart) = GetIntervalAndXStart();
             Vector2Int? newCoords = null;
+
             if (!destroy) {
                 float minDist = float.MaxValue;
                 foreach (Vector2Int coords in GetAdjacentCoords(cell.Coords).Where(IsFree)) {
@@ -89,12 +87,14 @@ namespace Field {
                     }
                 }
             }
+
             if (destroy || !newCoords.HasValue) {
                 newCoords = cell.Coords;
-                DestroyCell(cell.Coords, FieldObjectDestroyType.Normal);
+                DestroyCell(cell, FieldObjectDestroyType.Normal);
             }
-            CreateCell(new FieldObjectInfo(obj, newCoords.Value, color), interval, xStart);
-            ProcessMatches(newCoords.Value, color);
+
+            FieldCell newCell = CreateCell(obj, newCoords.Value, color, interval, xStart);
+            ProcessMatches(newCell, color);
         }
 
         private void OnDrawGizmos() {
@@ -108,13 +108,15 @@ namespace Field {
             }
         }
 
-        private void ProcessMatches(Vector2Int coords, Color color) {
-            int topRowMatches = 0;
+        private void ProcessMatches(FieldCell rootCell, Color color) {
+            int topRowMatchCellCount = 0;
             Bfs(
-                coords,
+                rootCell,
                 cell => {
                     bool match = cell.Color == color;
-                    if (!match) {
+                    if (!match
+                        && cell.Coords.y > 0
+                        && !this.matchAdjacent.Contains(cell)) {
                         this.matchAdjacent.Add(cell);
                     }
                     return match;
@@ -122,8 +124,9 @@ namespace Field {
                 cell => {
                     this.match.Add(cell);
                     if (cell.Coords.y == 0) {
-                        topRowMatches++;
+                        topRowMatchCellCount++;
                     }
+                    return false;
                 });
             
             if (this.match.Count < this.minMatch) {
@@ -135,31 +138,33 @@ namespace Field {
             this.toDestroy.AddRange(this.match.Select(cell =>
                 (cell.Object, FieldObjectDestroyType.Normal)));
 
-            bool win = (this.topRowCellCount - topRowMatches) <= this.topRowWinCellCount;
+            bool win = (this.topRowCellCount - topRowMatchCellCount)
+                <= this.topRowWinCellCount;
             if (win) {
                 for (int y = 0; y < this.maxSize.y; y++) {
                     for (int x = 0; x < this.maxSize.x; x++) {
                         FieldCell? cell = this.cells[y, x];
-                        if (cell == null
-                            || this.match.Contains(cell)) {
-                            continue;
+                        if (cell != null
+                            && !this.match.Contains(cell)) {
+                            this.isolated.Add(cell);
                         }
-                        this.isolated.Add(cell);
                     }
                 }
             } else {
-                int otherCellCount = this.cellCount - this.match.Count;
                 while (this.matchAdjacent.Count > 0) {
-                    FieldCell cell = this.matchAdjacent[^1];
-                    Bfs(
-                        cell.Coords,
+                    bool includesTopRow = Bfs(
+                        this.matchAdjacent[^1],
                         cell => !this.match.Contains(cell),
                         cell => {
+                            if (cell.Coords.y == 0) {
+                                return true;
+                            }
                             this.matchAdjacent.Remove(cell);
                             this.isolatedBuffer.Add(cell);
+                            return false;
                         });
                     // found isolated cells
-                    if (this.isolatedBuffer.Count < otherCellCount) {
+                    if (!includesTopRow) {
                         this.isolated.AddRange(this.isolatedBuffer);
                     }
                     this.isolatedBuffer.Clear();
@@ -171,7 +176,7 @@ namespace Field {
                 (cell.Object, FieldObjectDestroyType.Isolated)));
 
             foreach (FieldCell cell in this.match.Concat(this.isolated)) {
-                DestroyCell(cell.Coords, destroyObject: null);
+                DestroyCell(cell, destroyObject: null);
             }
             this.match.Clear();
             this.isolated.Clear();
@@ -186,79 +191,71 @@ namespace Field {
             this.toDestroy.Clear();
         }
 
-        private void Bfs(
+        private FieldCell CreateCell(
+            IFieldObject obj,
             Vector2Int coords,
-            Func<FieldCell, bool> predicate,
-            Action<FieldCell> visit) {
-            if (!IsInBounds(coords)) {
-                return;
-            }
-
-            FieldCell? cell = this.cells[coords.y, coords.x];
-
-            if (cell == null) {
-                return;
-            }
-
-            this.bfsVisited ??= new bool[this.maxSize.y, this.maxSize.x];
-            do {
-                if (cell == null
-                    || this.bfsVisited[cell.Coords.y, cell.Coords.x]) {
-                    continue;
-                }
-
-                visit.Invoke(cell);
-                this.bfsVisited[cell.Coords.y, cell.Coords.x] = true;
-
-                foreach (Vector2Int c in GetAdjacentCoords(cell.Coords)) {
-                    if (this.bfsVisited[c.y, c.x]) {
-                        continue;
-                    }
-
-                    cell = this.cells[c.y, c.x];
-
-                    if (cell == null
-                        || !predicate.Invoke(cell)) {
-                        continue;
-                    }
-
-                    this.bfsQueue.Enqueue(cell);
-                }
-            }
-            while (this.bfsQueue.TryDequeue(out cell));
-            Array.Clear(this.bfsVisited, 0, this.bfsVisited.Length);
-        }
-
-        private void CreateCell(FieldObjectInfo objInfo, float interval, float xStart) {
-            FieldCell cell = Instantiate(this.cellPrefab, transform);
-            cell.transform.position = GetPosition(objInfo.coords, interval, xStart);
-            cell.Init(this, objInfo.obj, objInfo.coords, objInfo.color);
-            this.cells[objInfo.coords.y, objInfo.coords.x] = cell;
-            this.cellCount++;
-            if (objInfo.coords.y == 0) {
+            Color color,
+            float interval,
+            float xStart) {
+            FieldCell cell = Instantiate(this.cellPrefab);
+            cell.transform.SetParent(transform);
+            cell.transform.position = GetPosition(coords, interval, xStart);
+            cell.Init(this, obj, coords, color);
+            this.cells[coords.y, coords.x] = cell;
+            if (coords.y == 0) {
                 this.topRowCellCount++;
             }
+            return cell;
         }
 
         private void DestroyCell(Vector2Int coords, FieldObjectDestroyType? destroyObject) {
             FieldCell? cell = this.cells[coords.y, coords.x];
-            if (cell == null) {
-                return;
+            if (cell != null) {
+                DestroyCell(cell, destroyObject);
             }
+        }
+
+        private void DestroyCell(FieldCell cell, FieldObjectDestroyType? destroyObject) {
             cell.DetachObject(destroyObject);
             Destroy(cell.gameObject);
-            this.cells[coords.y, coords.x] = null;
-            this.cellCount--;
-            if (coords.y == 0) {
+            this.cells[cell.Coords.y, cell.Coords.x] = null;
+            if (cell.Coords.y == 0) {
                 this.topRowCellCount--;
             }
         }
 
-        private IEnumerable<Vector2Int> GetAdjacentCoords(Vector2Int coords) {
-            if (!IsInBounds(coords)) {
-                yield break;
-            }
+        private bool Bfs(
+            FieldCell cell,
+            Func<FieldCell, bool> predicate,
+            Func<FieldCell, bool> visit) {
+            this.bfsVisited ??= new bool[this.maxSize.y, this.maxSize.x];
+            do {
+                if (this.bfsVisited[cell.Coords.y, cell.Coords.x]) {
+                    continue;
+                }
 
+                if (visit.Invoke(cell)) {
+                    this.bfsQueue.Clear();
+                    Array.Clear(this.bfsVisited, 0, this.bfsVisited.Length);
+                    return true;
+                }
+                this.bfsVisited[cell.Coords.y, cell.Coords.x] = true;
+
+                foreach (Vector2Int c in GetAdjacentCoords(cell.Coords)) {
+                    FieldCell? adjacentCell = this.cells[c.y, c.x];
+                    if (adjacentCell != null
+                        && !this.bfsVisited[adjacentCell.Coords.y, adjacentCell.Coords.x]
+                        && predicate.Invoke(adjacentCell)) {
+                        this.bfsQueue.Enqueue(adjacentCell);
+                    }
+                }
+            }
+            while (this.bfsQueue.TryDequeue(out cell));
+            Array.Clear(this.bfsVisited, 0, this.bfsVisited.Length);
+            return false;
+        }
+
+        private IEnumerable<Vector2Int> GetAdjacentCoords(Vector2Int coords) {
             for (int dy = -1; dy <= 1; dy++) {
                 for (int dx = -1; dx <= 1; dx++) {
                     if (dx == 0 && dy == 0) {
@@ -279,7 +276,10 @@ namespace Field {
 
                     Vector2Int adjacent = coords + new Vector2Int(dx, dy);
 
-                    if (!IsInBounds(adjacent)) {
+                    if (adjacent.x < 0
+                        || adjacent.x >= this.maxSize.x
+                        || adjacent.y < 0
+                        || adjacent.y >= this.maxSize.y) {
                         continue;
                     }
 
@@ -295,15 +295,7 @@ namespace Field {
         }
 
         private bool IsFree(Vector2Int coords) {
-            return IsInBounds(coords)
-                && this.cells[coords.y, coords.x] == null;
-        }
-
-        private bool IsInBounds(Vector2Int coords) {
-            return coords.x >= 0
-                && coords.x < this.maxSize.x
-                && coords.y >= 0
-                && coords.y < this.maxSize.y;
+            return this.cells[coords.y, coords.x] == null;
         }
 
         private (float, float) GetIntervalAndXStart() {
