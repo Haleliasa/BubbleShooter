@@ -25,7 +25,7 @@ namespace Shooting {
 
         public float Distance { get; private set; }
 
-        public event Action<EventData> Shoot;
+        public event Action<ShotData> Shot;
 
         void IDragHandler.OnDrag(PointerEventData eventData) {
             UpdateData(eventData.pressPosition, eventData.position);
@@ -34,7 +34,7 @@ namespace Shooting {
         void IEndDragHandler.OnEndDrag(PointerEventData eventData) {
             UpdateData(eventData.pressPosition, eventData.position);
             if (Distance > 0f) {
-                Shoot?.Invoke(new EventData(this, Direction, Distance));
+                Shot?.Invoke(new ShotData(this, Direction, Distance));
             }
             ResetData();
         }
@@ -81,8 +81,8 @@ namespace Shooting {
             return position;
         }
 
-        public readonly struct EventData {
-            public EventData(Slingshot slingshot, Vector2 direction, float distance) {
+        public readonly struct ShotData {
+            public ShotData(Slingshot slingshot, Vector2 direction, float distance) {
                 this.slingshot = slingshot;
                 this.direction = direction;
                 this.distance = distance;

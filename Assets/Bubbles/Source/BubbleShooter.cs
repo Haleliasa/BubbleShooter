@@ -50,6 +50,8 @@ namespace Bubbles {
         private Color nextColor;
         private readonly List<Vector2> trajectoryBuffer = new();
 
+        public int ShotCount => this.shotCount;
+
         public void Init(IEnumerable<Color> colors, int shotCount) {
             this.colors.Clear();
             this.colors.AddRange(colors);
@@ -58,7 +60,7 @@ namespace Bubbles {
             }
             this.shotCount = Math.Max(shotCount, 1);
             if (!this.inited) {
-                this.slingshot.Shoot += Shoot;
+                this.slingshot.Shot += Shoot;
                 this.inited = true;
             }
             PrepareProjectile();
@@ -93,7 +95,7 @@ namespace Bubbles {
             }
         }
 
-        private void Shoot(Slingshot.EventData data) {
+        private void Shoot(Slingshot.ShotData data) {
             if (this.preparedProjectile == null) {
                 return;
             }

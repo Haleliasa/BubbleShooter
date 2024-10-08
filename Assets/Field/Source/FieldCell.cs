@@ -26,7 +26,7 @@ namespace Field {
         }
 
         void IFieldCell.Hit(IFieldObject obj, Color color, Vector2 position, bool destroy) {
-            this.field.Hit(this, obj, color, position, destroy);
+            this.field.HitCell(this, obj, color, position, destroy);
         }
     }
 }

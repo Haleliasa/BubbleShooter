@@ -1,5 +1,6 @@
 ﻿#nullable enable
 
+using Levels;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -39,8 +40,8 @@ namespace Field {
         private float objectDestroyDelay = 0.1f;
 
         private FieldCell?[,] cells = null!;
-        private int topRowCellCount;
-        private int topRowWinCellCount;
+        private int topRowCount;
+        private int topRowWinCount;
         private readonly List<FieldCell> match = new();
         private readonly List<FieldCell> matchAdjacent = new();
         private readonly List<FieldCell> isolatedBuffer = new();
@@ -49,7 +50,12 @@ namespace Field {
         private readonly Queue<FieldCell> bfsQueue = new();
         private bool[,] bfsVisited = null!;
 
-        public void Init(IEnumerable<FieldObjectInfo> objects) {
+        public event Action<HitData>? Hit;
+
+        public void Init(
+            IEnumerable<LevelItem> items,
+            IReadOnlyList<Color> colors,
+            IFieldObjectFactory objectFactory) {
             this.cells ??= new FieldCell[this.maxSize.y, this.maxSize.x];
 
             for (int y = 0; y < this.maxSize.y; y++) {
@@ -59,15 +65,17 @@ namespace Field {
             }
 
             (float interval, float xStart) = GetIntervalAndXStart();
-            this.topRowCellCount = 0;
-            foreach (FieldObjectInfo objInfo in objects) {
-                CreateCell(objInfo.obj, objInfo.coords, objInfo.color, interval, xStart);
+            this.topRowCount = 0;
+            foreach (LevelItem item in items) {
+                Color color = colors[item.colorIndex];
+                IFieldObject obj = objectFactory.CreateFieldObject(color);
+                CreateCell(obj, item.coords, color, interval, xStart);
             }
-            this.topRowWinCellCount = Mathf.FloorToInt(
-                this.topRowCellCount * this.topRowWinFraction);
+            this.topRowWinCount = Mathf.FloorToInt(
+                this.topRowCount * this.topRowWinFraction);
         }
 
-        public void Hit(
+        public void HitCell(
             FieldCell cell,
             IFieldObject obj,
             Color color,
@@ -94,7 +102,8 @@ namespace Field {
             }
 
             FieldCell newCell = CreateCell(obj, newCoords.Value, color, interval, xStart);
-            ProcessMatches(newCell, color);
+            HitData data = ProcessMatches(newCell, color);
+            Hit?.Invoke(data);
         }
 
         private void OnDrawGizmos() {
@@ -108,8 +117,8 @@ namespace Field {
             }
         }
 
-        private void ProcessMatches(FieldCell rootCell, Color color) {
-            int topRowMatchCellCount = 0;
+        private HitData ProcessMatches(FieldCell rootCell, Color color) {
+            int topRowMatchCount = 0;
             Bfs(
                 rootCell,
                 cell => {
@@ -124,7 +133,7 @@ namespace Field {
                 cell => {
                     this.match.Add(cell);
                     if (cell.Coords.y == 0) {
-                        topRowMatchCellCount++;
+                        topRowMatchCount++;
                     }
                     return false;
                 });
@@ -132,14 +141,14 @@ namespace Field {
             if (this.match.Count < this.minMatch) {
                 this.match.Clear();
                 this.matchAdjacent.Clear();
-                return;
+                return new HitData(this, matchCount: 0, isolatedCount: 0, win: false);
             }
 
             this.toDestroy.AddRange(this.match.Select(cell =>
                 (cell.Object, FieldObjectDestroyType.Normal)));
 
-            bool win = (this.topRowCellCount - topRowMatchCellCount)
-                <= this.topRowWinCellCount;
+            bool win = (this.topRowCount - topRowMatchCount)
+                <= this.topRowWinCount;
             if (win) {
                 for (int y = 0; y < this.maxSize.y; y++) {
                     for (int x = 0; x < this.maxSize.x; x++) {
@@ -175,12 +184,14 @@ namespace Field {
             this.toDestroy.AddRange(this.isolated.Select(cell =>
                 (cell.Object, FieldObjectDestroyType.Isolated)));
 
+            HitData hitData = new(this, this.match.Count, this.isolated.Count, win);
             foreach (FieldCell cell in this.match.Concat(this.isolated)) {
                 DestroyCell(cell, destroyObject: null);
             }
             this.match.Clear();
             this.isolated.Clear();
             StartCoroutine(DestroyObjects());
+            return hitData;
         }
 
         private IEnumerator DestroyObjects() {
@@ -203,7 +214,7 @@ namespace Field {
             cell.Init(this, obj, coords, color);
             this.cells[coords.y, coords.x] = cell;
             if (coords.y == 0) {
-                this.topRowCellCount++;
+                this.topRowCount++;
             }
             return cell;
         }
@@ -220,7 +231,7 @@ namespace Field {
             Destroy(cell.gameObject);
             this.cells[cell.Coords.y, cell.Coords.x] = null;
             if (cell.Coords.y == 0) {
-                this.topRowCellCount--;
+                this.topRowCount--;
             }
         }
 
@@ -302,6 +313,20 @@ namespace Field {
             float interval = (this.cellRadius * 2f) + this.cellSpacing;
             float xStart = -(this.maxSize.x - 1) / 2f;
             return (interval, xStart);
+        }
+
+        public readonly struct HitData {
+            public HitData(Field field, int matchCount, int isolatedCount, bool win) {
+                this.field = field;
+                this.matchCount = matchCount;
+                this.isolatedCount = isolatedCount;
+                this.win = win;
+            }
+
+            public readonly Field field;
+            public readonly int matchCount;
+            public readonly int isolatedCount;
+            public readonly bool win;
         }
     }
 }
