@@ -197,10 +197,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 2586400922679990497}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.3, y: 0.05}
-  m_AnchorMax: {x: 0.7, y: 0.25}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 0.4}
+  m_AnchoredPosition: {x: 0, y: 5}
+  m_SizeDelta: {x: -20, y: -10}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8125316418108909088
 CanvasRenderer:
@@ -226,7 +226,7 @@ MonoBehaviour:
   line: {fileID: 0}
   camera: {fileID: 0}
   minDistance: 0.01
-  maxDistance: 0.1
+  maxDistance: 0.2
 --- !u!114 &2335310370210803329
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -44,7 +44,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cb008d31fa28a954ea2d92d8fa40673a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  config: {fileID: 11400000, guid: ebc78a3b53843f64582103c50f399d6a, type: 2}
   field: {fileID: 0}
   shooter: {fileID: 0}
-  colorConfig: {fileID: 11400000, guid: ebc78a3b53843f64582103c50f399d6a, type: 2}
-  staticBubblePrefab: {fileID: -7273503467626982961, guid: 3820cf6e2bd406e4d983e7e71928e81d, type: 3}

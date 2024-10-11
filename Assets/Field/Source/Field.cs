@@ -46,7 +46,8 @@ namespace Field {
         private readonly List<FieldCell> matchAdjacent = new();
         private readonly List<FieldCell> isolatedBuffer = new();
         private readonly List<FieldCell> isolated = new();
-        private readonly List<(IFieldObject, FieldObjectDestroyType)> toDestroy = new();
+        private readonly Queue<(IFieldObject, FieldObjectDestroyType)> toDestroy = new();
+        private Coroutine? destroyCoroutine;
         private readonly Queue<FieldCell> bfsQueue = new();
         private bool[,] bfsVisited = null!;
 
@@ -61,6 +62,14 @@ namespace Field {
             for (int y = 0; y < this.maxSize.y; y++) {
                 for (int x = 0; x < this.maxSize.x; x++) {
                     DestroyCell(new Vector2Int(x, y), FieldObjectDestroyType.Dispose);
+                }
+            }
+
+            if (this.destroyCoroutine != null) {
+                StopCoroutine(this.destroyCoroutine);
+                while (this.toDestroy.TryDequeue(
+                    out (IFieldObject obj, FieldObjectDestroyType) item)) {
+                    item.obj.Destroy(FieldObjectDestroyType.Dispose);
                 }
             }
 
@@ -144,9 +153,6 @@ namespace Field {
                 return new HitData(this, matchCount: 0, isolatedCount: 0, win: false);
             }
 
-            this.toDestroy.AddRange(this.match.Select(cell =>
-                (cell.Object, FieldObjectDestroyType.Normal)));
-
             bool win = (this.topRowCount - topRowMatchCount)
                 <= this.topRowWinCount;
             if (win) {
@@ -181,25 +187,35 @@ namespace Field {
             }
             this.matchAdjacent.Clear();
 
-            this.toDestroy.AddRange(this.isolated.Select(cell =>
-                (cell.Object, FieldObjectDestroyType.Isolated)));
-
             HitData hitData = new(this, this.match.Count, this.isolated.Count, win);
-            foreach (FieldCell cell in this.match.Concat(this.isolated)) {
+
+            foreach (FieldCell cell in this.match) {
+                this.toDestroy.Enqueue((cell.Object, FieldObjectDestroyType.Normal));
                 DestroyCell(cell, destroyObject: null);
             }
             this.match.Clear();
+
+            foreach (FieldCell cell in this.isolated) {
+                this.toDestroy.Enqueue((cell.Object, FieldObjectDestroyType.Isolated));
+                DestroyCell(cell, destroyObject: null);
+            }
             this.isolated.Clear();
-            StartCoroutine(DestroyObjects());
+
+            if (this.destroyCoroutine != null) {
+                StopCoroutine(this.destroyCoroutine);
+            }
+            this.destroyCoroutine = StartCoroutine(DestroyObjects());
+
             return hitData;
         }
 
         private IEnumerator DestroyObjects() {
-            foreach ((IFieldObject obj, FieldObjectDestroyType type) in this.toDestroy) {
-                obj.Destroy(type);
+            while (this.toDestroy.TryDequeue(
+                out (IFieldObject obj, FieldObjectDestroyType type) item)) {
+                item.obj.Destroy(item.type);
                 yield return new WaitForSeconds(this.objectDestroyDelay);
             }
-            this.toDestroy.Clear();
+            this.destroyCoroutine = null;
         }
 
         private FieldCell CreateCell(

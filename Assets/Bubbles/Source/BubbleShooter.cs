@@ -55,9 +55,7 @@ namespace Bubbles {
         public void Init(IEnumerable<Color> colors, int shotCount) {
             this.colors.Clear();
             this.colors.AddRange(colors);
-            if (this.colors.Count > 0) {
-                this.nextColor = this.colors[0];
-            }
+            UpdateNextColor();
             this.shotCount = Math.Max(shotCount, 1);
             if (!this.inited) {
                 this.slingshot.Shot += Shoot;
@@ -81,7 +79,7 @@ namespace Bubbles {
             projectile.transform.localPosition = Vector3.zero;
             projectile.Init(this.nextColor);
             this.preparedProjectile = projectile.Projectile;
-            this.nextColor = this.colors[UnityEngine.Random.Range(0, this.colors.Count)];
+            UpdateNextColor();
 
             this.slingshot.enabled = true;
 
@@ -149,6 +147,13 @@ namespace Bubbles {
             }
 
             this.trajectoryBuffer.Clear();
+        }
+
+        private void UpdateNextColor() {
+            if (this.colors.Count == 0) {
+                this.nextColor = Color.white;
+            }
+            this.nextColor = this.colors[UnityEngine.Random.Range(0, this.colors.Count)];
         }
     }
 }

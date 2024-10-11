@@ -6,7 +6,5 @@ namespace Levels {
         Task<IReadOnlyList<LevelInfo>> LoadLevels();
 
         Task<LevelData?> LoadLevel(int index);
-
-        Task<LevelData?> LoadLevel(string name);
     }
 }

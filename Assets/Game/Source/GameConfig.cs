@@ -3,9 +3,9 @@ using UnityEngine;
 
 namespace Game {
     [CreateAssetMenu(
-        fileName = nameof(ColorConfig),
-        menuName = nameof(ColorConfig))]
-    public class ColorConfig : ScriptableObject {
+        fileName = nameof(GameConfig),
+        menuName = nameof(GameConfig))]
+    public class GameConfig : ScriptableObject {
         [SerializeField]
         private Color[] colors;
 
