@@ -442,9 +442,17 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 3740495433820916674}
     - target: {fileID: 808962092119983484, guid: 3871d89d60323f94880d0a2d82b8e94b, type: 3}
+      propertyPath: canvas
+      value: 
+      objectReference: {fileID: 8298517188831233617}
+    - target: {fileID: 808962092119983484, guid: 3871d89d60323f94880d0a2d82b8e94b, type: 3}
       propertyPath: shooter
       value: 
       objectReference: {fileID: 74049143925476830}
+    - target: {fileID: 808962092119983484, guid: 3871d89d60323f94880d0a2d82b8e94b, type: 3}
+      propertyPath: scoreText
+      value: 
+      objectReference: {fileID: 8298517188831233618}
     - target: {fileID: 5998307508874594581, guid: 3871d89d60323f94880d0a2d82b8e94b, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -731,9 +739,9 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 1809420783623319104, guid: a7356939d8a26b84cbb317edba144c73, type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: 5.0000076
+    - target: {fileID: 5542049614743894673, guid: a7356939d8a26b84cbb317edba144c73, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5612412765986026019, guid: a7356939d8a26b84cbb317edba144c73, type: 3}
       propertyPath: m_AnchorMax.x
@@ -764,6 +772,22 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a7356939d8a26b84cbb317edba144c73, type: 3}
+--- !u!223 &8298517188831233617 stripped
+Canvas:
+  m_CorrespondingSourceObject: {fileID: 7773095463092972871, guid: a7356939d8a26b84cbb317edba144c73, type: 3}
+  m_PrefabInstance: {fileID: 8298517188831233616}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &8298517188831233618 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2526769011877197574, guid: a7356939d8a26b84cbb317edba144c73, type: 3}
+  m_PrefabInstance: {fileID: 8298517188831233616}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

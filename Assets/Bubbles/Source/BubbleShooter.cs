@@ -45,41 +45,38 @@ namespace Bubbles {
 
         private readonly List<Color> colors = new();
         private int shotCount;
-        private bool inited = false;
-        private Projectile? preparedProjectile;
+        private bool subbed = false;
+        private ProjectileBubble? projectile;
         private Color nextColor;
         private readonly List<Vector2> trajectoryBuffer = new();
 
         public int ShotCount => this.shotCount;
 
+        public event Action<BubbleShooter>? BubbleDestroying;
+
         public void Init(IEnumerable<Color> colors, int shotCount) {
             this.colors.Clear();
             this.colors.AddRange(colors);
-            UpdateNextColor();
+            this.nextColor = GetNextColor();
             this.shotCount = Math.Max(shotCount, 1);
-            if (!this.inited) {
-                this.slingshot.Shot += Shoot;
-                this.inited = true;
+            this.slingshot.enabled = false;
+            if (!this.subbed) {
+                Subscribe();
+                this.subbed = true;
             }
-            PrepareProjectile();
         }
 
-        private void Update() {
-            UpdateProjectileTrajectory();
-        }
-
-        private void PrepareProjectile() {
+        public void Prepare() {
             if (this.colors.Count == 0
                 || this.shotCount <= 0) {
                 return;
             }
 
-            ProjectileBubble projectile = Instantiate(this.projectilePrefab);
-            projectile.transform.SetParent(transform);
-            projectile.transform.localPosition = Vector3.zero;
-            projectile.Init(this.nextColor);
-            this.preparedProjectile = projectile.Projectile;
-            UpdateNextColor();
+            this.projectile = Instantiate(this.projectilePrefab);
+            this.projectile.transform.SetParent(transform);
+            this.projectile.transform.localPosition = Vector3.zero;
+            this.projectile.Init(this.nextColor);
+            this.nextColor = GetNextColor();
 
             this.slingshot.enabled = true;
 
@@ -93,30 +90,58 @@ namespace Bubbles {
             }
         }
 
+        private void OnEnable() {
+            if (this.subbed) {
+                Subscribe();
+            }
+        }
+
+        private void Update() {
+            UpdateProjectileTrajectory();
+        }
+
+        private void OnDisable() {
+            if (this.subbed) {
+                Unsubscribe();
+            }
+        }
+
         private void Shoot(Slingshot.ShotData data) {
-            if (this.preparedProjectile == null) {
+            if (this.projectile == null) {
                 return;
             }
-            this.preparedProjectile.Launch(data.direction, data.distance);
-            this.preparedProjectile.Stopped += OnProjectileStopped;
-            this.preparedProjectile = null;
+            SubscribeProjectile(this.projectile);
+            this.projectile.Projectile.Launch(data.direction, data.distance);
             this.slingshot.enabled = false;
         }
 
         private void OnProjectileStopped(Projectile projectile) {
-            projectile.Stopped -= OnProjectileStopped;
-            PrepareProjectile();
+            if (this.projectile == null) {
+                return;
+            }
+            UnsubscribeProjectile(this.projectile);
+            this.projectile = null;
+        }
+
+        private void OnBubbleDestroying(Bubble bubble) {
+            if (this.projectile == null) {
+                return;
+            }
+            UnsubscribeProjectile(this.projectile);
+            this.projectile = null;
+            BubbleDestroying?.Invoke(this);
         }
 
         private void UpdateProjectileTrajectory() {
-            if (this.preparedProjectile == null
+            if (this.projectile == null
+                || this.projectile.Projectile.IsMoving
                 || Mathf.Approximately(this.slingshot.Distance, 0f)) {
                 this.trajectory.positionCount = 0;
                 this.altTrajectory.positionCount = 0;
                 return;
             }
 
-            this.preparedProjectile.GetTrajectory(
+            this.projectile.Projectile.GetTrajectory(
                 this.slingshot.Direction,
                 this.slingshot.Distance,
                 this.targetLayers,
@@ -149,11 +174,29 @@ namespace Bubbles {
             this.trajectoryBuffer.Clear();
         }
 
-        private void UpdateNextColor() {
+        private void Subscribe() {
+            this.slingshot.Shot += Shoot;
+        }
+
+        private void Unsubscribe() {
+            this.slingshot.Shot -= Shoot;
+        }
+
+        private void SubscribeProjectile(ProjectileBubble projectile) {
+            projectile.Projectile.Stopped += OnProjectileStopped;
+            projectile.Bubble.Destroying += OnBubbleDestroying;
+        }
+
+        private void UnsubscribeProjectile(ProjectileBubble projectile) {
+            projectile.Projectile.Stopped -= OnProjectileStopped;
+            projectile.Bubble.Destroying -= OnBubbleDestroying;
+        }
+
+        private Color GetNextColor() {
             if (this.colors.Count == 0) {
-                this.nextColor = Color.white;
+                return Color.white;
             }
-            this.nextColor = this.colors[UnityEngine.Random.Range(0, this.colors.Count)];
+            return this.colors[UnityEngine.Random.Range(0, this.colors.Count)];
         }
     }
 }

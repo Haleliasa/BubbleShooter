@@ -23,3 +23,8 @@ MonoBehaviour:
   - {r: 0.531296, g: 0.9433962, b: 0.11124954, a: 1}
   - {r: 0.37853515, g: 0.15267888, b: 0.6886792, a: 1}
   - {r: 0.5754717, g: 0.37374353, b: 0.18187076, a: 1}
+  matchPoints: 1
+  isolatedPoints: 2
+  dialogPrefab: {fileID: 59948479264270097, guid: 7d99bdbb8f42cb4409d23c356f2bf26d, type: 3}
+  winDialogDelay: 2
+  loseDialogDelay: 1

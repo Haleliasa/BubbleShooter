@@ -13,17 +13,18 @@ namespace Bubbles {
         [SerializeField]
         private float fieldAttachDuration = 0.1f;
 
-        private Bubble bubble = null!;
         private (Vector2, Vector2)? attachPath;
         private float attachTime;
+
+        public Bubble Bubble { get; private set; } = null!;
 
         public Projectile Projectile { get; private set; } = null!;
 
         public void Init(Color color) {
-            if (this.bubble == null) {
-                this.bubble = GetComponent<Bubble>();
+            if (Bubble == null) {
+                Bubble = GetComponent<Bubble>();
             }
-            this.bubble.Init(color);
+            Bubble.Init(color);
 
             if (Projectile == null) {
                 Projectile = GetComponent<Projectile>();
@@ -33,17 +34,17 @@ namespace Bubbles {
         void IFieldObject.Init(Transform position) {
             Projectile.Stop();
             transform.SetParent(position, worldPositionStays: true);
-            this.attachPath = (this.bubble.Position, position.position);
+            this.attachPath = (Bubble.Position, position.position);
             this.attachTime = 0f;
         }
 
         void IFieldObject.Detach() {
-            this.bubble.transform.SetParent(null, worldPositionStays: true);
+            Bubble.transform.SetParent(null, worldPositionStays: true);
         }
 
         void IFieldObject.Destroy(FieldObjectDestroyType type) {
             this.attachPath = null;
-            this.bubble.Destroy(type);
+            Bubble.Destroy(type);
         }
 
         private void FixedUpdate() {
@@ -71,8 +72,8 @@ namespace Bubbles {
             IFieldCell? cell = obj.GetComponentInChildren<IFieldCell>();
             cell?.Hit(
                 this,
-                this.bubble.Color,
-                this.bubble.Position,
+                Bubble.Color,
+                Bubble.Position,
                 destroy: Mathf.Approximately(Projectile.Power, 1f));
         }
 
@@ -84,10 +85,10 @@ namespace Bubbles {
             out bool finished) {
             time += deltaTime;
             if (time < this.fieldAttachDuration) {
-                this.bubble.Move(Vector2.Lerp(from, to, time / this.fieldAttachDuration));
+                Bubble.Move(Vector2.Lerp(from, to, time / this.fieldAttachDuration));
                 finished = false;
             } else {
-                this.bubble.Pin(to);
+                Bubble.Pin(to);
                 finished = true;
             }
         }

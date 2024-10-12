@@ -107,7 +107,7 @@ namespace Field {
 
             if (destroy || !newCoords.HasValue) {
                 newCoords = cell.Coords;
-                DestroyCell(cell, FieldObjectDestroyType.Normal);
+                DestroyCell(cell, FieldObjectDestroyType.Match);
             }
 
             FieldCell newCell = CreateCell(obj, newCoords.Value, color, interval, xStart);
@@ -189,8 +189,12 @@ namespace Field {
 
             HitData hitData = new(this, this.match.Count, this.isolated.Count, win);
 
+            if (this.destroyCoroutine != null) {
+                StopCoroutine(this.destroyCoroutine);
+            }
+
             foreach (FieldCell cell in this.match) {
-                this.toDestroy.Enqueue((cell.Object, FieldObjectDestroyType.Normal));
+                this.toDestroy.Enqueue((cell.Object, FieldObjectDestroyType.Match));
                 DestroyCell(cell, destroyObject: null);
             }
             this.match.Clear();
@@ -201,15 +205,13 @@ namespace Field {
             }
             this.isolated.Clear();
 
-            if (this.destroyCoroutine != null) {
-                StopCoroutine(this.destroyCoroutine);
-            }
             this.destroyCoroutine = StartCoroutine(DestroyObjects());
 
             return hitData;
         }
 
         private IEnumerator DestroyObjects() {
+            yield return new WaitForSeconds(this.objectDestroyDelay);
             while (this.toDestroy.TryDequeue(
                 out (IFieldObject obj, FieldObjectDestroyType type) item)) {
                 item.obj.Destroy(item.type);

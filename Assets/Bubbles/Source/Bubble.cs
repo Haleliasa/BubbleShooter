@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace Bubbles {
     [RequireComponent(typeof(Rigidbody2D))]
@@ -16,6 +17,8 @@ namespace Bubbles {
         public Color Color { get; private set; }
 
         public Vector2 Position => this.rigidbody.position;
+
+        public event Action<Bubble> Destroying;
 
         public void Init(Color color) {
             if (this.rigidbody == null) {
@@ -55,6 +58,7 @@ namespace Bubbles {
         }
 
         public void Destroy() {
+            Destroying?.Invoke(this);
             Destroy(gameObject);
         }
 

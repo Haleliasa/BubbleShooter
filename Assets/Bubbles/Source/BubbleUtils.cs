@@ -4,7 +4,7 @@ namespace Bubbles {
     public static class BubbleUtils {
         public static void Destroy(this Bubble bubble, FieldObjectDestroyType type) {
             switch (type) {
-                case FieldObjectDestroyType.Normal:
+                case FieldObjectDestroyType.Match:
                     bubble.Pop();
                     break;
 
