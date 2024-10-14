@@ -13,8 +13,15 @@ namespace Shooting {
         [SerializeField]
         private new Rigidbody2D? rigidbody;
 
+        [Tooltip("units")]
+        [Min(0f)]
         [SerializeField]
         private float radius = 0.5f;
+
+        [Tooltip("units")]
+        [Min(0f)]
+        [SerializeField]
+        private float mandatoryWallBounce = 0.1f;
 
         private Vector2? dir;
         private float speed;
@@ -211,8 +218,9 @@ namespace Shooting {
 
             movement = finalDir * hit.distance;
             if (hit.collider.CheckLayer(this.config.WallLayers)) {
-                movement += Vector2.Reflect(finalDir, hit.normal) * (dist - hit.distance);
                 dir = Vector2.Reflect(dir, hit.normal);
+                movement += (Vector2.Reflect(finalDir, hit.normal) * (dist - hit.distance))
+                    + new Vector2(this.mandatoryWallBounce * Mathf.Sign(dir.x), 0f);
             } else {
                 reachedTarget = true;
             }

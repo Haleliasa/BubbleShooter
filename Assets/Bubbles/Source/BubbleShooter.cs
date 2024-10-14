@@ -31,9 +31,13 @@ namespace Bubbles {
         [SerializeField]
         private LayerMask targetLayers;
 
+        [Tooltip("sec")]
+        [Min(0.001f)]
         [SerializeField]
         private float trajectoryTimeStep = 0.02f;
 
+        [Tooltip("sec")]
+        [Min(0.001f)]
         [SerializeField]
         private float maxTrajectoryTime = 5f;
 

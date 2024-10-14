@@ -96,6 +96,7 @@ MonoBehaviour:
   config: {fileID: 11400000, guid: 3f5132639223aad4fa2a5b046be4a42d, type: 2}
   rigidbody: {fileID: 8199544022214891648}
   radius: 0.5
+  mandatoryWallBounce: 0.1
 --- !u!50 &8199544022214891648 stripped
 Rigidbody2D:
   m_CorrespondingSourceObject: {fileID: 9007185761247679276, guid: 14a990fecaae52945a233342ee2d0afb, type: 3}
