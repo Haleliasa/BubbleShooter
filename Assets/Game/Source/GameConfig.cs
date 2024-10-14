@@ -18,9 +18,6 @@ namespace Game {
         [SerializeField]
         private int isolatedPoints = 2;
 
-        [SerializeField]
-        private Dialog<bool> dialogPrefab;
-
         [Tooltip("sec")]
         [Min(0f)]
         [SerializeField]
@@ -36,8 +33,6 @@ namespace Game {
         public int MatchPoints => this.matchPoints;
 
         public int IsolatedPoints => this.isolatedPoints;
-
-        public Dialog<bool> DialogPrefab => this.dialogPrefab;
 
         public float WinDialogDelay => this.winDialogDelay;
 

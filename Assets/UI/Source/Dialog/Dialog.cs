@@ -35,12 +35,12 @@ namespace UI {
     
         public static Dialog<T> Show(
             Dialog<T> prefab,
-            Transform container,
             string title,
             string body,
-            IEnumerable<DialogOption<T>> options) {
+            IEnumerable<DialogOption<T>> options,
+            Transform container) {
             Dialog<T> dialog = Instantiate(prefab);
-            dialog.Show(container, title, body, options);
+            dialog.Show(title, body, options, container);
             return dialog;
         }
 
@@ -53,11 +53,10 @@ namespace UI {
         }
 
         private void Show(
-            Transform container,
             string title,
             string body,
-            IEnumerable<DialogOption<T>> options) {
-            transform.SetParent(container, worldPositionStays: false);
+            IEnumerable<DialogOption<T>> options,
+            Transform container) {
             this.title.text = title;
             this.body.text = body;
             foreach (DialogOption<T> option in options) {
@@ -67,6 +66,7 @@ namespace UI {
                 button.Clicked += OnButtonClicked;
                 this.buttons.Add(button);
             }
+            transform.SetParent(container, worldPositionStays: false);
             this.resultSource = new TaskCompletionSource<T>();
         }
 

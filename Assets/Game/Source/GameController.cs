@@ -9,6 +9,7 @@ using TMPro;
 using UI;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Game {
     public class GameController : MonoBehaviour {
@@ -27,8 +28,16 @@ namespace Game {
         [SerializeField]
         private TMP_Text scoreText;
 
+        [SerializeField]
+        private Dialog<bool> dialogPrefab;
+
+        [Scene]
+        [SerializeField]
+        private string menuScene;
+
         private IFieldObjectFactory fieldObjectFactory;
         private ILevelLoader levelLoader;
+        private LevelData? currentLevel;
         private int score;
         private bool subbed = false;
 
@@ -37,25 +46,22 @@ namespace Game {
             ILevelLoader levelLoader) {
             this.fieldObjectFactory = fieldObjectFactory;
             this.levelLoader = levelLoader;
-            _ = StartGame();
+            _ = StartGame(level: null);
         }
 
-        private async Task StartGame() {
-            IReadOnlyList<LevelInfo> levels = await this.levelLoader.LoadLevels();
+        public void GoMenu() {
+            SceneManager.LoadScene(this.menuScene);
+        }
 
-            if (levels.Count == 0) {
-                Debug.Log("level not found");
+        private async Task StartGame(LevelData? level) {
+            level ??= await LoadRandomLevel();
+
+            if (level == null) {
+                await ProcessLevelUnavailable();
                 return;
             }
 
-            LevelInfo levelInfo = levels[Random.Range(0, levels.Count)];
-            LevelData? level = await this.levelLoader.LoadLevel(levelInfo.index);
-
-            if (!level.HasValue) {
-                Debug.Log("level not found");
-                return;
-            }
-
+            this.currentLevel = level;
             this.field.Init(level.Value.items, this.config.Colors, this.fieldObjectFactory);
             this.shooter.Init(
                 level.Value.items
@@ -70,6 +76,16 @@ namespace Game {
                 Subscribe();
                 this.subbed = true;
             }
+        }
+
+        private async Task<LevelData?> LoadRandomLevel() {
+            IReadOnlyList<LevelInfo> levels = await this.levelLoader.LoadLevels();
+            if (levels.Count == 0) {
+                return null;
+            }
+            LevelInfo levelInfo = levels[Random.Range(0, levels.Count)];
+            LevelData? level = await this.levelLoader.LoadLevel(levelInfo.index);
+            return level;
         }
 
         private void OnEnable() {
@@ -117,24 +133,34 @@ namespace Game {
                 : this.config.LoseDialogDelay);
 
             Dialog<bool> dialog = Dialog.Show(
-                this.config.DialogPrefab,
-                this.canvas.transform,
+                this.dialogPrefab,
                 win ? "You win!" : "You lost :(",
                 "Play again?",
-                Dialog.YesNoOptions());
+                Dialog.YesNoOptions(),
+                this.canvas.transform);
             Task<bool> resultTask = dialog.Result;
             yield return new WaitUntil(() => resultTask.IsCompleted);
 
             if (!resultTask.Result) {
-#if UNITY_EDITOR
-                EditorApplication.isPlaying = false;
-#else
-                Application.Quit();
-#endif
+                GoMenu();
                 yield break;
             }
 
-            _ = StartGame();
+            _ = StartGame(level: win ? null : this.currentLevel);
+        }
+
+        private async Task ProcessLevelUnavailable() {
+            bool result = await Dialog.Show(
+                this.dialogPrefab,
+                "Level unavailable",
+                "Try again?",
+                Dialog.YesNoOptions(),
+                this.canvas.transform).Result;
+            if (!result) {
+                GoMenu();
+                return;
+            }
+            _ = StartGame(level: null);
         }
 
         private void AddScore(int deltaScore) {
