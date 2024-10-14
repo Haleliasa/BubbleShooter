@@ -1,7 +1,6 @@
 ﻿using Bubbles;
 using Field;
 using Levels;
-using System.IO;
 using UnityEngine;
 
 namespace Game {
@@ -12,13 +11,14 @@ namespace Game {
         [SerializeField]
         private StaticBubble staticBubblePrefab;
 
+        [AddressablesLabel]
+        [SerializeField]
+        private string[] levelAddressablesLabels;
+
         private void Start() {
             this.gameController.Init(
                 new StaticBubbleFactory(this.staticBubblePrefab),
-                new DefaultLevelLoader(
-                    Application.dataPath,
-                    Path.Combine(Application.dataPath, "Levels"),
-                    Path.Combine(Application.dataPath, "levels")));
+                new AddressablesLevelLoader(this.levelAddressablesLabels));
         }
 
         private class StaticBubbleFactory : IFieldObjectFactory {

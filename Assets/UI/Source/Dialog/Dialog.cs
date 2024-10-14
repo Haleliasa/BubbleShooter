@@ -28,10 +28,10 @@ namespace UI {
         [SerializeField]
         private DialogButton<T> buttonPrefab;
 
-        private TaskCompletionSource<T> resultSource;
+        private TaskCompletionSource<T> resultTaskSource;
         private readonly List<DialogButton<T>> buttons = new();
 
-        public Task<T> Result => this.resultSource.Task;
+        public Task<T> Result => this.resultTaskSource.Task;
     
         public static Dialog<T> Show(
             Dialog<T> prefab,
@@ -67,11 +67,11 @@ namespace UI {
                 this.buttons.Add(button);
             }
             transform.SetParent(container, worldPositionStays: false);
-            this.resultSource = new TaskCompletionSource<T>();
+            this.resultTaskSource = new TaskCompletionSource<T>();
         }
 
         private void OnButtonClicked(DialogButton<T> button) {
-            this.resultSource.TrySetResult(button.Option);
+            this.resultTaskSource.TrySetResult(button.Option);
             Destroy(gameObject);
         }
 

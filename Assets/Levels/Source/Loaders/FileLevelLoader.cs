@@ -4,17 +4,16 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using UnityEngine;
 
 namespace Levels {
-    public class DefaultLevelLoader : ILevelLoader {
-        public const string FilePattern = "*.lvl";
+    public class FileLevelLoader : ILevelLoader {
+        public const string FilePattern = "*.txt";
 
         private readonly string[] directories;
         private readonly List<LevelInfo> levels = new();
         private readonly List<FileInfo> levelFiles = new();
         
-        public DefaultLevelLoader(params string[] directories) {
+        public FileLevelLoader(params string[] directories) {
             this.directories = directories;
         }
 
@@ -35,39 +34,14 @@ namespace Levels {
             if (index < 0 || index >= this.levels.Count) {
                 return null;
             }
-
             FileInfo file = this.levelFiles[index];
-            
             if (!file.Exists) {
                 return null;
             }
-
             using StreamReader reader = file.OpenText();
-            string? shotCountLine = await reader.ReadLineAsync();
-
-            if (!int.TryParse(shotCountLine, out int shotCount)) {
-                return null;
-            }
-
-            List<LevelItem> levelItems = new();
-            int y = 0;
-            while (!reader.EndOfStream) {
-                string fieldLine = await reader.ReadLineAsync();
-                for (int x = 0; x < fieldLine.Length; x++) {
-                    char colorIndexChar = fieldLine[x];
-
-                    if (!char.IsDigit(colorIndexChar)) {
-                        return null;
-                    }
-
-                    levelItems.Add(new LevelItem(
-                        new Vector2Int(x, y),
-                        colorIndexChar - '0'));
-                }
-                y++;
-            }
-
-            return new LevelData(levelItems, shotCount);
+            string text = await reader.ReadToEndAsync();
+            LevelData? data = TextLevel.Parse(text);
+            return data;
         }
     }
 }

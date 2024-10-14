@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using UI;
 using UnityEditor;
 using UnityEngine;
@@ -26,7 +27,11 @@ public class MenuController : MonoBehaviour {
         SceneManager.LoadScene(this.aboutScene);
     }
 
-    public async void Quit() {
+    public void Quit() {
+        QuitInternal().FireAndForget();
+    }
+
+    private async Task QuitInternal() {
         bool result = await Dialog.Show(
             this.dialogPrefab,
             "Quit",

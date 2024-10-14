@@ -46,3 +46,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameController: {fileID: 0}
   staticBubblePrefab: {fileID: -7273503467626982961, guid: 3820cf6e2bd406e4d983e7e71928e81d, type: 3}
+  levelAddressablesLabels:
+  - levels

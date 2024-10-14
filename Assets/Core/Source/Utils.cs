@@ -1,3 +1,5 @@
+using System;
+using System.Threading.Tasks;
 using UnityEngine;
 
 public static class Utils {
@@ -16,5 +18,13 @@ public static class Utils {
         return new Vector2(
             (vector.x * cos) - (vector.y * sin),
             (vector.x * sin) + (vector.y * cos));
+    }
+
+    public static async void FireAndForget(this Task task) {
+        try {
+            await task;
+        } catch (Exception e) {
+            Debug.LogError(e);
+        }
     }
 }

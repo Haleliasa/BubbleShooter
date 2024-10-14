@@ -43,16 +43,16 @@ namespace Shooting {
             ResetData();
         }
 
-        private void UpdateData(Vector2 start, Vector2 end) {
-            Vector2 dir = end - start;
-            float dist = dir.magnitude;
+        private void UpdateData(Vector2 screenFrom, Vector2 screenTo) {
+            Vector2 vec = ToContainer(screenTo) - ToContainer(screenFrom);
+            float dist = vec.magnitude;
 
             if (Mathf.Approximately(dist, 0f)) {
                 ResetData();
                 return;
             }
 
-            float size = Mathf.Max(this.container.rect.width, this.container.rect.height);
+            float size = GetContainerSize();
             float relativeDist = dist / size;
 
             if (relativeDist < this.minDistance) {
@@ -60,13 +60,18 @@ namespace Shooting {
                 return;
             }
 
-            relativeDist = Mathf.Min(relativeDist, this.maxDistance);
-            Direction = -dir / dist;
+            float lineFraction = 1f;
+            if (relativeDist > this.maxDistance) {
+                lineFraction = this.maxDistance / relativeDist;
+                relativeDist = this.maxDistance;
+            }
+
+            Direction = -vec / dist;
             Distance = relativeDist / this.maxDistance;
             
             this.line.positionCount = 2;
-            this.line.SetPosition(0, ToWorld(start));
-            this.line.SetPosition(1, ToWorld(start - (Direction * (relativeDist * size))));
+            this.line.SetPosition(0, ToWorld(screenFrom));
+            this.line.SetPosition(1, ToWorld(screenFrom + ((screenTo - screenFrom) * lineFraction)));
         }
 
         private void ResetData() {
@@ -75,10 +80,23 @@ namespace Shooting {
             this.line.positionCount = 0;
         }
 
-        private Vector3 ToWorld(Vector3 position) {
-            position = this.camera.ScreenToWorldPoint(position);
-            position.z = 0f;
-            return position;
+        private Vector2 ToContainer(Vector2 screenPos) {
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                this.container,
+                screenPos,
+                this.camera,
+                out Vector2 rectPos);
+            return rectPos;
+        }
+
+        private float GetContainerSize() {
+            return Mathf.Max(this.container.rect.width, this.container.rect.height);
+        }
+
+        private Vector3 ToWorld(Vector3 screenPos) {
+            screenPos = this.camera.ScreenToWorldPoint(screenPos);
+            screenPos.z = 0f;
+            return screenPos;
         }
 
         public readonly struct ShotData {

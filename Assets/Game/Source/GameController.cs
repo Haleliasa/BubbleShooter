@@ -46,18 +46,18 @@ namespace Game {
             ILevelLoader levelLoader) {
             this.fieldObjectFactory = fieldObjectFactory;
             this.levelLoader = levelLoader;
-            _ = StartGame(level: null);
+            StartGame(level: null).FireAndForget();
         }
 
         public void GoMenu() {
-            SceneManager.LoadScene(this.menuScene);
+            GoMenuInternal(ask: true).FireAndForget();
         }
 
         private async Task StartGame(LevelData? level) {
             level ??= await LoadRandomLevel();
 
             if (level == null) {
-                await ProcessLevelUnavailable();
+                ProcessLevelUnavailable().FireAndForget();
                 return;
             }
 
@@ -142,11 +142,11 @@ namespace Game {
             yield return new WaitUntil(() => resultTask.IsCompleted);
 
             if (!resultTask.Result) {
-                GoMenu();
+                GoMenuInternal(ask: false).FireAndForget();
                 yield break;
             }
 
-            _ = StartGame(level: win ? null : this.currentLevel);
+            StartGame(level: win ? null : this.currentLevel).FireAndForget();
         }
 
         private async Task ProcessLevelUnavailable() {
@@ -157,10 +157,25 @@ namespace Game {
                 Dialog.YesNoOptions(),
                 this.canvas.transform).Result;
             if (!result) {
-                GoMenu();
+                GoMenuInternal(ask: false).FireAndForget();
                 return;
             }
-            _ = StartGame(level: null);
+            StartGame(level: null).FireAndForget();
+        }
+
+        private async Task GoMenuInternal(bool ask) {
+            if (ask) {
+                bool result = await Dialog.Show(
+                    this.dialogPrefab,
+                    "Leave",
+                    "Are you sure?",
+                    Dialog.YesNoOptions(),
+                    this.canvas.transform).Result;
+                if (!result) {
+                    return;
+                }
+            }
+            SceneManager.LoadScene(this.menuScene);
         }
 
         private void AddScore(int deltaScore) {
