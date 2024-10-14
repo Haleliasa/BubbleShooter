@@ -136,6 +136,7 @@ MonoBehaviour:
   floorLayers:
     serializedVersion: 2
     m_Bits: 64
+  popDuration: 0.1
 --- !u!58 &327311115455427140
 CircleCollider2D:
   m_ObjectHideFlags: 0

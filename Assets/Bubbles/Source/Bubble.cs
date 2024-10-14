@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using UnityEngine;
 
 namespace Bubbles {
@@ -10,6 +11,11 @@ namespace Bubbles {
 
         [SerializeField]
         private LayerMask floorLayers;
+
+        [Tooltip("sec")]
+        [Min(0f)]
+        [SerializeField]
+        private float popDuration = 0.5f;
 
         private new Rigidbody2D rigidbody;
         private SpringJoint2D springJoint;
@@ -49,7 +55,7 @@ namespace Bubbles {
         }
 
         public void Pop() {
-            Destroy();
+            StartCoroutine(PopRoutine());
         }
 
         public void Fall() {
@@ -74,6 +80,18 @@ namespace Bubbles {
             if (obj.CheckLayer(this.floorLayers)) {
                 Pop();
             }
+        }
+
+        private IEnumerator PopRoutine() {
+            Vector2 scale = this.renderer.transform.localScale;
+            float time = 0f;
+            while (time < this.popDuration) {
+                this.renderer.transform.localScale =
+                    Vector2.Lerp(scale, Vector2.zero, time / this.popDuration);
+                yield return null;
+                time += Time.deltaTime;
+            }
+            Destroy();
         }
     }
 }
