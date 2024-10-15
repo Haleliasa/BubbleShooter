@@ -220,7 +220,7 @@ namespace Shooting {
             if (hit.collider.CheckLayer(this.config.WallLayers)) {
                 dir = Vector2.Reflect(dir, hit.normal);
                 movement += (Vector2.Reflect(finalDir, hit.normal) * (dist - hit.distance))
-                    + new Vector2(this.mandatoryWallBounce * Mathf.Sign(dir.x), 0f);
+                    + (hit.normal * this.mandatoryWallBounce);
             } else {
                 reachedTarget = true;
             }
