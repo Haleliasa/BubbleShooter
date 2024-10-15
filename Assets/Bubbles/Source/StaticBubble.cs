@@ -1,20 +1,24 @@
-﻿using Field;
+﻿#nullable enable
+
+using Field;
+using System;
 using UnityEngine;
 
 namespace Bubbles {
     [RequireComponent(typeof(Bubble))]
     public class StaticBubble : MonoBehaviour, IFieldObject {
-        private Bubble bubble;
+        private Bubble bubble = null!;
 
-        public void Init(Color color) {
+        public void Init(Color color, IDisposable? pooled = null) {
             if (this.bubble == null) {
                 this.bubble = GetComponent<Bubble>();
             }
-            this.bubble.Init(color);
+            this.bubble.Init(color, pooled: pooled);
         }
 
         void IFieldObject.Init(Transform position) {
-            transform.SetParent(position, worldPositionStays: false);
+            transform.SetParent(position);
+            transform.localPosition = Vector3.zero;
             this.bubble.Pin(position.position);
         }
 

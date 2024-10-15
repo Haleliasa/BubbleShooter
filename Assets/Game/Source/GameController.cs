@@ -1,4 +1,6 @@
-﻿using Bubbles;
+﻿#nullable enable
+
+using Bubbles;
 using Field;
 using Levels;
 using System.Collections;
@@ -14,38 +16,50 @@ using UnityEngine.SceneManagement;
 namespace Game {
     public class GameController : MonoBehaviour {
         [SerializeField]
-        private GameConfig config;
+        private GameConfig config = null!;
 
         [SerializeField]
-        private Field.Field field;
+        private Field.Field field = null!;
 
         [SerializeField]
-        private BubbleShooter shooter;
+        private BubbleShooter shooter = null!;
 
         [SerializeField]
-        private Canvas canvas;
+        private Canvas canvas = null!;
 
         [SerializeField]
-        private TMP_Text scoreText;
+        private TMP_Text? scoreText;
 
         [SerializeField]
-        private Dialog<bool> dialogPrefab;
+        private Dialog<bool>? dialogPrefab;
 
         [Scene]
         [SerializeField]
-        private string menuScene;
+        private string menuScene = null!;
 
-        private IFieldObjectFactory fieldObjectFactory;
-        private ILevelLoader levelLoader;
+        private IFieldObjectFactory fieldObjectFactory = null!;
+        private ILevelLoader levelLoader = null!;
+        private IObjectPool<FieldCell>? fieldCellPool;
+        private IObjectPool<ProjectileBubble>? projectilePool;
+        private IObjectPool<Dialog<bool>>? dialogPool;
+        private IObjectPool<DialogButton<bool>>? dialogButtonPool;
         private LevelData? currentLevel;
         private int score;
         private bool subbed = false;
 
         public void Init(
             IFieldObjectFactory fieldObjectFactory,
-            ILevelLoader levelLoader) {
+            ILevelLoader levelLoader,
+            IObjectPool<FieldCell>? fieldCellPool = null,
+            IObjectPool<ProjectileBubble>? projectilePool = null,
+            IObjectPool<Dialog<bool>>? dialogPool = null,
+            IObjectPool<DialogButton<bool>>? dialogButtonPool = null) {
             this.fieldObjectFactory = fieldObjectFactory;
             this.levelLoader = levelLoader;
+            this.fieldCellPool = fieldCellPool;
+            this.projectilePool = projectilePool;
+            this.dialogPool = dialogPool;
+            this.dialogButtonPool = dialogButtonPool;
             StartGame(level: null).FireAndForget();
         }
 
@@ -62,13 +76,18 @@ namespace Game {
             }
 
             this.currentLevel = level;
-            this.field.Init(level.Value.items, this.config.Colors, this.fieldObjectFactory);
+            this.field.Init(
+                level.Value.items,
+                this.config.Colors,
+                this.fieldObjectFactory,
+                cellPool: this.fieldCellPool);
             this.shooter.Init(
                 level.Value.items
                     .Select(i => i.colorIndex)
                     .Distinct()
                     .Select(i => this.config.Colors[i]),
-                level.Value.shotCount);
+                level.Value.shotCount,
+                projectilePool: this.projectilePool);
             this.shooter.Prepare();
             SetScore(0);
 
@@ -133,11 +152,13 @@ namespace Game {
                 : this.config.LoseDialogDelay);
 
             Dialog<bool> dialog = Dialog.Show(
+                this.dialogPool,
                 this.dialogPrefab,
                 win ? "You win!" : "You lost :(",
                 "Play again?",
                 Dialog.YesNoOptions(),
-                this.canvas.transform);
+                this.canvas.transform,
+                buttonPool: this.dialogButtonPool);
             Task<bool> resultTask = dialog.Result;
             yield return new WaitUntil(() => resultTask.IsCompleted);
 
@@ -151,11 +172,13 @@ namespace Game {
 
         private async Task ProcessLevelUnavailable() {
             bool result = await Dialog.Show(
+                this.dialogPool,
                 this.dialogPrefab,
                 "Level unavailable",
                 "Try again?",
                 Dialog.YesNoOptions(),
-                this.canvas.transform).Result;
+                this.canvas.transform,
+                buttonPool: this.dialogButtonPool).Result;
             if (!result) {
                 GoMenuInternal(ask: false).FireAndForget();
                 return;
@@ -166,11 +189,13 @@ namespace Game {
         private async Task GoMenuInternal(bool ask) {
             if (ask) {
                 bool result = await Dialog.Show(
+                    this.dialogPool,
                     this.dialogPrefab,
                     "Leave",
                     "Are you sure?",
                     Dialog.YesNoOptions(),
-                    this.canvas.transform).Result;
+                    this.canvas.transform,
+                    buttonPool: this.dialogButtonPool).Result;
                 if (!result) {
                     return;
                 }
@@ -184,7 +209,9 @@ namespace Game {
 
         private void SetScore(int score) {
             this.score = score;
-            this.scoreText.text = this.score.ToString();
+            if (this.scoreText != null) {
+                this.scoreText.text = this.score.ToString();
+            }
         }
 
         private void Subscribe() {

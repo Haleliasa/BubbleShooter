@@ -10,7 +10,7 @@ using UnityEngine;
 namespace Field {
     public sealed class Field : MonoBehaviour {
         [SerializeField]
-        private FieldCell cellPrefab = null!;
+        private FieldCell? cellPrefab;
 
         [Tooltip("cells")]
         [SerializeField]
@@ -39,7 +39,8 @@ namespace Field {
         [SerializeField]
         private float objectDestroyDelay = 0.1f;
 
-        private FieldCell?[,] cells = null!;
+        private PooledOrInst<FieldCell>?[,] cells = null!;
+        private IObjectPool<FieldCell>? cellPool;
         private int topRowCount;
         private int topRowWinCount;
         private readonly List<FieldCell> match = new();
@@ -56,8 +57,10 @@ namespace Field {
         public void Init(
             IEnumerable<LevelItem> items,
             IReadOnlyList<Color> colors,
-            IFieldObjectFactory objectFactory) {
-            this.cells ??= new FieldCell[this.maxSize.y, this.maxSize.x];
+            IFieldObjectFactory objectFactory,
+            IObjectPool<FieldCell>? cellPool = null) {
+            this.cells ??= new PooledOrInst<FieldCell>?[this.maxSize.y, this.maxSize.x];
+            this.cellPool = cellPool;
 
             for (int y = 0; y < this.maxSize.y; y++) {
                 for (int x = 0; x < this.maxSize.x; x++) {
@@ -107,7 +110,7 @@ namespace Field {
 
             if (destroy || !newCoords.HasValue) {
                 newCoords = cell.Coords;
-                DestroyCell(cell, FieldObjectDestroyType.Match);
+                DestroyCell(cell.Coords, FieldObjectDestroyType.Match);
             }
 
             FieldCell newCell = CreateCell(obj, newCoords.Value, color, interval, xStart);
@@ -119,7 +122,7 @@ namespace Field {
             (float interval, float xStart) = GetIntervalAndXStart();
             for (int y = 0; y < this.maxSize.y; y++) {
                 for (int x = 0; x < this.maxSize.x; x++) {
-                    Gizmos.DrawSphere(
+                    Gizmos.DrawWireSphere(
                         GetPosition(new Vector2Int(x, y), interval, xStart),
                         this.cellRadius);
                 }
@@ -158,7 +161,7 @@ namespace Field {
             if (win) {
                 for (int y = 0; y < this.maxSize.y; y++) {
                     for (int x = 0; x < this.maxSize.x; x++) {
-                        FieldCell? cell = this.cells[y, x];
+                        FieldCell? cell = this.cells[y, x]?.Object;
                         if (cell != null
                             && !this.match.Contains(cell)) {
                             this.isolated.Add(cell);
@@ -195,13 +198,13 @@ namespace Field {
 
             foreach (FieldCell cell in this.match) {
                 this.toDestroy.Enqueue((cell.Object, FieldObjectDestroyType.Match));
-                DestroyCell(cell, destroyObject: null);
+                DestroyCell(cell.Coords, destroyObject: null);
             }
             this.match.Clear();
 
             foreach (FieldCell cell in this.isolated) {
                 this.toDestroy.Enqueue((cell.Object, FieldObjectDestroyType.Isolated));
-                DestroyCell(cell, destroyObject: null);
+                DestroyCell(cell.Coords, destroyObject: null);
             }
             this.isolated.Clear();
 
@@ -226,11 +229,13 @@ namespace Field {
             Color color,
             float interval,
             float xStart) {
-            FieldCell cell = Instantiate(this.cellPrefab);
+            PooledOrInst<FieldCell> createdCell =
+                PooledOrInst<FieldCell>.Create(this.cellPool, this.cellPrefab);
+            FieldCell cell = createdCell.Object;
             cell.transform.SetParent(transform);
             cell.transform.position = GetPosition(coords, interval, xStart);
             cell.Init(this, obj, coords, color);
-            this.cells[coords.y, coords.x] = cell;
+            this.cells[coords.y, coords.x] = createdCell;
             if (coords.y == 0) {
                 this.topRowCount++;
             }
@@ -238,17 +243,14 @@ namespace Field {
         }
 
         private void DestroyCell(Vector2Int coords, FieldObjectDestroyType? destroyObject) {
-            FieldCell? cell = this.cells[coords.y, coords.x];
-            if (cell != null) {
-                DestroyCell(cell, destroyObject);
+            PooledOrInst<FieldCell>? cell = this.cells[coords.y, coords.x];
+            if (!cell.HasValue) {
+                return;
             }
-        }
-
-        private void DestroyCell(FieldCell cell, FieldObjectDestroyType? destroyObject) {
-            cell.DetachObject(destroyObject);
-            Destroy(cell.gameObject);
-            this.cells[cell.Coords.y, cell.Coords.x] = null;
-            if (cell.Coords.y == 0) {
+            cell.Value.Object.DetachObject(destroyObject);
+            cell.Value.Destroy();
+            this.cells[coords.y, coords.x] = null;
+            if (coords.y == 0) {
                 this.topRowCount--;
             }
         }
@@ -271,7 +273,7 @@ namespace Field {
                 this.bfsVisited[cell.Coords.y, cell.Coords.x] = true;
 
                 foreach (Vector2Int c in GetAdjacentCoords(cell.Coords)) {
-                    FieldCell? adjacentCell = this.cells[c.y, c.x];
+                    FieldCell? adjacentCell = this.cells[c.y, c.x]?.Object;
                     if (adjacentCell != null
                         && !this.bfsVisited[adjacentCell.Coords.y, adjacentCell.Coords.x]
                         && predicate.Invoke(adjacentCell)) {

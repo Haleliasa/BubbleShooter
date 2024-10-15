@@ -1,37 +1,54 @@
 ﻿using Bubbles;
 using Field;
 using Levels;
+using UI;
 using UnityEngine;
 
 namespace Game {
     public class GameBootstrap : MonoBehaviour {
         [SerializeField]
-        private GameController gameController;
+        private GameController controller;
 
         [SerializeField]
-        private StaticBubble staticBubblePrefab;
+        private ObjectPool<FieldCell> fieldCellPool;
+
+        [SerializeField]
+        private ObjectPool<StaticBubble> staticBubblePool;
+
+        [SerializeField]
+        private ObjectPool<ProjectileBubble> projectileBubblePool;
+
+        [SerializeField]
+        private ObjectPool<Dialog<bool>> dialogPool;
+
+        [SerializeField]
+        private ObjectPool<DialogButton<bool>> dialogButtonPool;
 
         [AddressablesLabel]
         [SerializeField]
         private string[] levelAddressablesLabels;
 
         private void Start() {
-            this.gameController.Init(
-                new StaticBubbleFactory(this.staticBubblePrefab),
-                new AddressablesLevelLoader(this.levelAddressablesLabels));
+            this.controller.Init(
+                new StaticBubbleFactory(this.staticBubblePool),
+                new AddressablesLevelLoader(this.levelAddressablesLabels),
+                fieldCellPool: this.fieldCellPool,
+                projectilePool: this.projectileBubblePool,
+                dialogPool: this.dialogPool,
+                dialogButtonPool: this.dialogButtonPool);
         }
 
         private class StaticBubbleFactory : IFieldObjectFactory {
-            private readonly StaticBubble prefab;
+            private readonly IObjectPool<StaticBubble> pool;
 
-            public StaticBubbleFactory(StaticBubble prefab) {
-                this.prefab = prefab;
+            public StaticBubbleFactory(IObjectPool<StaticBubble> pool) {
+                this.pool = pool;
             }
 
             public IFieldObject CreateFieldObject(Color color) {
-                StaticBubble bubble = Instantiate(this.prefab);
-                bubble.Init(color);
-                return bubble;
+                IDisposableObject<StaticBubble> bubble = this.pool.Get();
+                bubble.Object.Init(color, pooled: bubble);
+                return bubble.Object;
             }
         }
     }

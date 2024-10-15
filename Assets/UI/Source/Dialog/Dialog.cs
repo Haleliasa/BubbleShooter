@@ -1,3 +1,6 @@
+#nullable enable
+
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TMPro;
@@ -17,30 +20,35 @@ namespace UI {
 
     public class Dialog<T> : MonoBehaviour {
         [SerializeField]
-        private TMP_Text title;
+        private TMP_Text title = null!;
 
         [SerializeField]
-        private TMP_Text body;
+        private TMP_Text body = null!;
 
         [SerializeField]
-        private Transform buttonContainer;
+        private Transform buttonContainer = null!;
 
         [SerializeField]
-        private DialogButton<T> buttonPrefab;
+        private DialogButton<T>? buttonPrefab;
 
-        private TaskCompletionSource<T> resultTaskSource;
-        private readonly List<DialogButton<T>> buttons = new();
+        private TaskCompletionSource<T> resultTaskSource = null!;
+        private readonly List<PooledOrInst<DialogButton<T>>> buttons = new();
+        private IDisposable? pooled;
 
         public Task<T> Result => this.resultTaskSource.Task;
-    
+
         public static Dialog<T> Show(
-            Dialog<T> prefab,
+            IObjectPool<Dialog<T>>? pool,
+            Dialog<T>? prefab,
             string title,
             string body,
             IEnumerable<DialogOption<T>> options,
-            Transform container) {
-            Dialog<T> dialog = Instantiate(prefab);
-            dialog.Show(title, body, options, container);
+            Transform container,
+            IObjectPool<DialogButton<T>>? buttonPool = null) {
+            PooledOrInst<Dialog<T>> createdDialog =
+                PooledOrInst<Dialog<T>>.Create(pool, prefab);
+            Dialog<T> dialog = createdDialog.Object;
+            dialog.Show(title, body, options, container, buttonPool, createdDialog.Pooled);
             return dialog;
         }
 
@@ -56,34 +64,46 @@ namespace UI {
             string title,
             string body,
             IEnumerable<DialogOption<T>> options,
-            Transform container) {
+            Transform container,
+            IObjectPool<DialogButton<T>>? buttonPool,
+            IDisposable? pooled) {
+            transform.SetParent(container, worldPositionStays: false);
             this.title.text = title;
             this.body.text = body;
             foreach (DialogOption<T> option in options) {
-                DialogButton<T> button = Instantiate(this.buttonPrefab);
+                PooledOrInst<DialogButton<T>> createdButton =
+                    PooledOrInst<DialogButton<T>>.Create(buttonPool, this.buttonPrefab);
+                DialogButton<T> button = createdButton.Object;
                 button.transform.SetParent(this.buttonContainer, worldPositionStays: false);
                 button.Init(option);
                 button.Clicked += OnButtonClicked;
-                this.buttons.Add(button);
+                this.buttons.Add(createdButton);
             }
-            transform.SetParent(container, worldPositionStays: false);
+            this.pooled = pooled;
             this.resultTaskSource = new TaskCompletionSource<T>();
         }
 
-        private void OnButtonClicked(DialogButton<T> button) {
-            this.resultTaskSource.TrySetResult(button.Option);
-            Destroy(gameObject);
+        private void OnButtonClicked(DialogButton<T> clickedButton) {
+            this.resultTaskSource.TrySetResult(clickedButton.Option);
+            foreach (PooledOrInst<DialogButton<T>> button in this.buttons) {
+                button.Destroy();
+            }
+            if (this.pooled != null) {
+                this.pooled.Dispose();
+            } else {
+                Destroy(gameObject);
+            }
         }
 
         private void Subscribe() {
-            foreach (DialogButton<T> button in this.buttons) {
-                button.Clicked += OnButtonClicked;
+            foreach (PooledOrInst<DialogButton<T>> button in this.buttons) {
+                button.Object.Clicked += OnButtonClicked;
             }
         }
 
         private void Unsubscribe() {
-            foreach (DialogButton<T> button in this.buttons) {
-                button.Clicked -= OnButtonClicked;
+            foreach (PooledOrInst<DialogButton<T>> button in this.buttons) {
+                button.Object.Clicked -= OnButtonClicked;
             }
         }
     }

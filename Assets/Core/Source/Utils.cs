@@ -1,8 +1,27 @@
+#nullable enable
+
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using UnityEngine;
 
 public static class Utils {
+    public static bool TryGetGameObject(
+        this UnityEngine.Object obj,
+        [NotNullWhen(true)] out GameObject? gameObject) {
+        switch (obj) {
+            case GameObject gObj:
+                gameObject = gObj;
+                return true;
+            case Component component:
+                gameObject = component.gameObject;
+                return true;
+            default:
+                gameObject = null;
+                return false;
+        }
+    }
+
     public static bool CheckLayer(this Component component, LayerMask mask) {
         return component.gameObject.CheckLayer(mask);
     }

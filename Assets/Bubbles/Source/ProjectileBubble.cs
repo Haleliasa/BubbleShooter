@@ -2,6 +2,7 @@
 
 using Field;
 using Shooting;
+using System;
 using UnityEngine;
 
 namespace Bubbles {
@@ -13,38 +14,40 @@ namespace Bubbles {
         [SerializeField]
         private float fieldAttachDuration = 0.1f;
 
+        private Bubble bubble = null!;
+        private Projectile projectile = null!;
         private (Vector2, Vector2)? attachPath;
         private float attachTime;
 
-        public Bubble Bubble { get; private set; } = null!;
+        public Bubble Bubble => this.bubble;
 
-        public Projectile Projectile { get; private set; } = null!;
+        public Projectile Projectile => this.projectile;
 
-        public void Init(Color color) {
-            if (Bubble == null) {
-                Bubble = GetComponent<Bubble>();
+        public void Init(Color color, IDisposable? pooled = null) {
+            if (this.bubble == null) {
+                this.bubble = GetComponent<Bubble>();
             }
-            Bubble.Init(color);
+            this.bubble.Init(color, pooled: pooled);
 
-            if (Projectile == null) {
-                Projectile = GetComponent<Projectile>();
+            if (this.projectile == null) {
+                this.projectile = GetComponent<Projectile>();
             }
         }
 
         void IFieldObject.Init(Transform position) {
-            Projectile.Stop();
+            this.projectile.Stop();
             transform.SetParent(position, worldPositionStays: true);
-            this.attachPath = (Bubble.Position, position.position);
+            this.attachPath = (this.bubble.Position, position.position);
             this.attachTime = 0f;
         }
 
         void IFieldObject.Detach() {
-            Bubble.transform.SetParent(null, worldPositionStays: true);
+            this.bubble.transform.SetParent(null, worldPositionStays: true);
         }
 
         void IFieldObject.Destroy(FieldObjectDestroyType type) {
             this.attachPath = null;
-            Bubble.Destroy(type);
+            this.bubble.Destroy(type);
         }
 
         private void FixedUpdate() {
@@ -66,15 +69,15 @@ namespace Bubbles {
         }
 
         private void HitFieldCell(GameObject obj) {
-            if (!Projectile.IsMoving) {
+            if (!this.projectile.IsMoving) {
                 return;
             }
             IFieldCell? cell = obj.GetComponentInChildren<IFieldCell>();
             cell?.Hit(
                 this,
-                Bubble.Color,
-                Bubble.Position,
-                destroy: Mathf.Approximately(Projectile.Power, 1f));
+                this.bubble.Color,
+                this.bubble.Position,
+                destroy: Mathf.Approximately(this.projectile.Power, 1f));
         }
 
         private void Attach(
@@ -85,10 +88,10 @@ namespace Bubbles {
             out bool finished) {
             time += deltaTime;
             if (time < this.fieldAttachDuration) {
-                Bubble.Move(Vector2.Lerp(from, to, time / this.fieldAttachDuration));
+                this.bubble.Move(Vector2.Lerp(from, to, time / this.fieldAttachDuration));
                 finished = false;
             } else {
-                Bubble.Pin(to);
+                this.bubble.Pin(to);
                 finished = true;
             }
         }
