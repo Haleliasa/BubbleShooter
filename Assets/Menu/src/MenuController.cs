@@ -1,18 +1,12 @@
 #nullable enable
 
 using System.Threading.Tasks;
-using UI;
+using UI.Dialog;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class MenuController : MonoBehaviour {
-    [SerializeField]
-    private Canvas canvas = null!;
-
-    [SerializeField]
-    private Dialog<bool>? dialogPrefab;
-
     [Scene]
     [SerializeField]
     private string gameScene = null!;
@@ -21,14 +15,10 @@ public class MenuController : MonoBehaviour {
     [SerializeField]
     private string aboutScene = null!;
 
-    private IObjectPool<Dialog<bool>>? dialogPool;
-    private IObjectPool<DialogButton<bool>>? dialogButtonPool;
+    private IDialogService dialogService = null!;
 
-    public void Init(
-        IObjectPool<Dialog<bool>>? dialogPool = null,
-        IObjectPool<DialogButton<bool>>? dialogButtonPool = null) {
-        this.dialogPool = dialogPool;
-        this.dialogButtonPool = dialogButtonPool;
+    public void Init(IDialogService dialogService) {
+        this.dialogService = dialogService;
     }
 
     public void StartNewGame() {
@@ -40,21 +30,20 @@ public class MenuController : MonoBehaviour {
     }
 
     public void Quit() {
-        QuitInternal().FireAndForget();
+        this.QuitInternal().FireAndForget();
     }
 
     private async Task QuitInternal() {
-        bool result = await Dialog.Show(
-            this.dialogPool,
-            this.dialogPrefab,
+        bool dialogRes = await this.dialogService.OpenAsync(
             "Quit",
             "Are you sure?",
-            Dialog.YesNoOptions(),
-            this.canvas.transform,
-            buttonPool: this.dialogButtonPool).Result;
-        if (!result) {
+            DialogOptions.YesNo()
+        ).result;
+
+        if (!dialogRes) {
             return;
         }
+
 #if UNITY_EDITOR
         EditorApplication.isPlaying = false;
 #else

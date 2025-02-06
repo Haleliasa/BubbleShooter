@@ -1,3 +1,3 @@
-﻿namespace UI {
-    public class DialogPool : ObjectPool<Dialog<bool>> { }
+﻿namespace UI.Dialog {
+    public sealed class DialogPool : ObjectPool<Dialog> { }
 }

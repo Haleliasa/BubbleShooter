@@ -157,10 +157,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: MenuController
       objectReference: {fileID: 0}
-    - target: {fileID: 8488072073243968437, guid: dbe26a3445e87f042a5b494d768d3b63, type: 3}
-      propertyPath: canvas
-      value: 
-      objectReference: {fileID: 6486134248229760280}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -292,11 +288,6 @@ PrefabInstance:
 --- !u!224 &5655176152340231087 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 2044406973137725005, guid: cd588242a80d75341bad8e43e6a2ae0f, type: 3}
-  m_PrefabInstance: {fileID: 5918866740767053282}
-  m_PrefabAsset: {fileID: 0}
---- !u!223 &6486134248229760280 stripped
-Canvas:
-  m_CorrespondingSourceObject: {fileID: 587554047833258234, guid: cd588242a80d75341bad8e43e6a2ae0f, type: 3}
   m_PrefabInstance: {fileID: 5918866740767053282}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &6001600363559465458

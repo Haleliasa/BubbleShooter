@@ -1,4 +1,5 @@
-﻿using UI;
+﻿using GoogleMobileAds.Api;
+using UI.Dialog;
 using UnityEngine;
 
 namespace Menu {
@@ -7,15 +8,23 @@ namespace Menu {
         private MenuController controller;
 
         [SerializeField]
-        private ObjectPool<Dialog<bool>> dialogPool;
+        private Canvas canvas;
 
         [SerializeField]
-        private ObjectPool<DialogButton<bool>> dialogButtonPool;
-        
+        private ObjectPool<Dialog> dialogPool;
+
+        [SerializeField]
+        private ObjectPool<DialogButton> dialogButtonPool;
+
+        private readonly ILogger logger = Debug.unityLogger;
+        private const string logTag = nameof(MenuBootstrap);
+
         private void Start() {
+            MobileAds.Initialize(status => this.logger.Log(logTag, "Ads initialized", this));
+
             this.controller.Init(
-                dialogPool: this.dialogPool,
-                dialogButtonPool: this.dialogButtonPool);
+                new PooledDialogService(this.dialogPool, this.dialogButtonPool, this.canvas.transform)
+            );
         }
     }
 }

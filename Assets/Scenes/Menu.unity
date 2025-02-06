@@ -304,6 +304,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   controller: {fileID: 9043640864714569692}
+  canvas: {fileID: 9043640864714569693}
   dialogPool: {fileID: 1356042261}
   dialogButtonPool: {fileID: 1246282166}
 --- !u!1001 &1246282165
@@ -678,6 +679,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8fdf88de8c7b25d4e9f9361fd50b1307, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!223 &9043640864714569693 stripped
+Canvas:
+  m_CorrespondingSourceObject: {fileID: 6486134248229760280, guid: 147960b69c25c0e4fa323082c2638336, type: 3}
+  m_PrefabInstance: {fileID: 9043640864714569691}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

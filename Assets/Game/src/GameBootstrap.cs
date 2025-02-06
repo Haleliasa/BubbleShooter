@@ -1,13 +1,16 @@
 ﻿using Bubbles;
 using Field;
 using Levels;
-using UI;
+using UI.Dialog;
 using UnityEngine;
 
 namespace Game {
     public class GameBootstrap : MonoBehaviour {
         [SerializeField]
         private GameController controller;
+
+        [SerializeField]
+        private Canvas canvas;
 
         [SerializeField]
         private ObjectPool<FieldCell> fieldCellPool;
@@ -19,10 +22,10 @@ namespace Game {
         private ObjectPool<ProjectileBubble> projectileBubblePool;
 
         [SerializeField]
-        private ObjectPool<Dialog<bool>> dialogPool;
+        private ObjectPool<Dialog> dialogPool;
 
         [SerializeField]
-        private ObjectPool<DialogButton<bool>> dialogButtonPool;
+        private ObjectPool<DialogButton> dialogButtonPool;
 
         [AddressablesLabel]
         [SerializeField]
@@ -32,10 +35,10 @@ namespace Game {
             this.controller.Init(
                 new StaticBubbleFactory(this.staticBubblePool),
                 new AddressablesLevelLoader(this.levelAddressablesLabels),
-                fieldCellPool: this.fieldCellPool,
-                projectilePool: this.projectileBubblePool,
-                dialogPool: this.dialogPool,
-                dialogButtonPool: this.dialogButtonPool);
+                this.fieldCellPool,
+                this.projectileBubblePool,
+                new PooledDialogService(this.dialogPool, this.dialogButtonPool, this.canvas.transform)
+            );
         }
 
         private class StaticBubbleFactory : IFieldObjectFactory {
@@ -48,6 +51,7 @@ namespace Game {
             public IFieldObject CreateFieldObject(Color color) {
                 IDisposableObject<StaticBubble> bubble = this.pool.Get();
                 bubble.Object.Init(color, pooled: bubble);
+
                 return bubble.Object;
             }
         }
