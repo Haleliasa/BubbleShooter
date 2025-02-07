@@ -11,31 +11,24 @@ namespace UI.Dialog {
         [SerializeField]
         private TMP_Text text;
 
-        private bool subbed = false;
-
         public string Text => this.text.text;
 
         public event Action<DialogButton> Clicked;
 
         public void Init(string text) {
             this.text.text = text;
-
-            if (!this.subbed) {
-                this.Subscribe();
-                this.subbed = true;
-            }
         }
 
         private void OnEnable() {
-            if (this.subbed) {
-                this.Subscribe();
-            }
+            this.Subscribe();
         }
 
         private void OnDisable() {
-            if (this.subbed) {
-                this.Unsubscribe();
-            }
+            this.Unsubscribe();
+        }
+
+        private void OnClick() {
+            Clicked?.Invoke(this);
         }
 
         private void Subscribe() {
@@ -44,10 +37,6 @@ namespace UI.Dialog {
 
         private void Unsubscribe() {
             this.button.onClick.RemoveListener(this.OnClick);
-        }
-
-        private void OnClick() {
-            Clicked?.Invoke(this);
         }
     }
 }

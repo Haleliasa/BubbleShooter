@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
-using UI;
 using UnityEngine;
 
 namespace Game {
     [CreateAssetMenu(
         fileName = nameof(GameConfig),
-        menuName = nameof(GameConfig))]
+        menuName = nameof(GameConfig)
+    )]
     public class GameConfig : ScriptableObject {
         [SerializeField]
         private Color[] colors;
