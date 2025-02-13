@@ -4,6 +4,11 @@ using UnityEngine;
 
 namespace UI {
     public class UiPage : MonoBehaviour {
+        [SerializeField]
+        private new string name = null!;
+
+        public string Name => this.name;
+
         private IUiController controller = null!;
 
         public IUiController Controller => this.controller;

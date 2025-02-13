@@ -1,10 +1,10 @@
 ﻿#nullable enable
 
-using Shooting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
+using UI.Game;
 using UnityEngine;
 
 namespace Bubbles {

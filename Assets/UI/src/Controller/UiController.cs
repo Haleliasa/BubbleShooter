@@ -6,10 +6,9 @@ using UnityEngine;
 namespace UI {
     public class UiController : MonoBehaviour, IUiController {
         [SerializeField]
-        private PageSetting[] pages = null!;
-
-        [SerializeField]
         private string startPage = null!;
+
+        private UiPage[] pages = null!;
 
         private ILogger logger = null!;
         private const string logTag = nameof(UiController);
@@ -17,10 +16,14 @@ namespace UI {
         private int currentPageIndex = -1;
 
         public void Init(ILogger logger) {
-            for (int i = 0; i < this.pages.Length; i++) {
-                UiPage page = this.pages[i].obj;
+            this.pages = FindObjectsByType<UiPage>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None
+            );
+
+            foreach (UiPage page in this.pages) {
                 page.Register(this);
-                ClosePage(page);
+                page.Close();
             }
 
             this.logger = logger;
@@ -29,7 +32,7 @@ namespace UI {
         }
 
         public void GoTo(string uiPage) {
-            int newPageIndex = Array.FindIndex(this.pages, p => p.name == uiPage);
+            int newPageIndex = Array.FindIndex(this.pages, p => p.Name == uiPage);
 
             if (newPageIndex < 0) {
                 this.logger.LogError(logTag, $"Page {uiPage} not found", this);
@@ -38,25 +41,11 @@ namespace UI {
             }
 
             if (this.currentPageIndex >= 0) {
-                ClosePage(this.pages[this.currentPageIndex].obj);
+                this.pages[this.currentPageIndex].Close();
             }
 
-            OpenPage(this.pages[newPageIndex].obj);
+            this.pages[newPageIndex].Open();
             this.currentPageIndex = newPageIndex;
-        }
-
-        private static void OpenPage(UiPage page) {
-            page.gameObject.SetActive(true);
-        }
-
-        private static void ClosePage(UiPage page) {
-            page.gameObject.SetActive(false);
-        }
-
-        [Serializable]
-        private struct PageSetting {
-            public string name;
-            public UiPage obj;
         }
     }
 }

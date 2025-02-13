@@ -2,6 +2,6 @@
 
 namespace Field {
     public interface IFieldObjectFactory {
-        IFieldObject CreateFieldObject(Color color);
+        IFieldObject Create(Color color);
     }
 }

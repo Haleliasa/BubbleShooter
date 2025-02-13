@@ -1,7 +1,6 @@
 #nullable enable
 
 using Field;
-using Shooting;
 using System;
 using UnityEngine;
 
