@@ -1,14 +1,15 @@
 ﻿#nullable enable
 
+using BubbleShooter.Core;
+using BubbleShooter.UI.Game;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
-using UI.Game;
 using UnityEngine;
 
-namespace Bubbles {
-    public class BubbleShooter : MonoBehaviour {
+namespace BubbleShooter.Bubbles {
+    public class ProjectileBubbleShooter : MonoBehaviour {
         [SerializeField]
         private Slingshot slingshot = null!;
 
@@ -57,7 +58,7 @@ namespace Bubbles {
 
         public int ShotCount => this.shotCount;
 
-        public event Action<BubbleShooter>? BubbleDestroying;
+        public event Action<ProjectileBubbleShooter>? BubbleDestroying;
 
         public void Init(
             IEnumerable<Color> colors,

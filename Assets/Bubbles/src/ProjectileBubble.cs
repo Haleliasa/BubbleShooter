@@ -1,10 +1,10 @@
 #nullable enable
 
-using Field;
+using BubbleShooter.Field;
 using System;
 using UnityEngine;
 
-namespace Bubbles {
+namespace BubbleShooter.Bubbles {
     [RequireComponent(typeof(Bubble))]
     [RequireComponent(typeof(Projectile))]
     public class ProjectileBubble : MonoBehaviour, IFieldObject {

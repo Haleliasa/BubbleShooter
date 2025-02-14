@@ -1,10 +1,11 @@
 ﻿#nullable enable
 
+using BubbleShooter.Core;
 using System;
 using System.Collections;
 using UnityEngine;
 
-namespace Bubbles {
+namespace BubbleShooter.Bubbles {
     [RequireComponent(typeof(Rigidbody2D))]
     [RequireComponent(typeof(SpringJoint2D))]
     public class Bubble : MonoBehaviour {

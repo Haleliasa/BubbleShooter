@@ -3,7 +3,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace UI.Commands {
+namespace BubbleShooter.UI.Commands {
     public class ButtonCommand : UiCommand {
         [SerializeField]
         private Button button = null!;

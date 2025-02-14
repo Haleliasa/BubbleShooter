@@ -2,7 +2,7 @@
 
 using UnityEngine;
 
-namespace UI {
+namespace BubbleShooter.UI {
     public class UiPage : MonoBehaviour {
         [SerializeField]
         private new string name = null!;

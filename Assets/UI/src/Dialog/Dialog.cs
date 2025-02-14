@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 
-namespace UI.Dialog {
+namespace BubbleShooter.UI.Dialog {
     public sealed class Dialog : MonoBehaviour {
         [SerializeField]
         private TMP_Text title = null!;

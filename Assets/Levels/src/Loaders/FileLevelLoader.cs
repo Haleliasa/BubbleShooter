@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Levels {
+namespace BubbleShooter.Levels {
     public class FileLevelLoader : ILevelLoader {
         public const string FilePattern = "*.txt";
 

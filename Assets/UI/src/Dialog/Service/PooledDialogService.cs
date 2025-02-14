@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using BubbleShooter.Core;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace UI.Dialog {
+namespace BubbleShooter.UI.Dialog {
     public class PooledDialogService : IDialogService {
         private readonly IConcreteObjectPool<Dialog> dialogPool;
         private readonly IConcreteObjectPool<DialogButton> dialogButtonPool;

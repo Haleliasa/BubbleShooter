@@ -3,7 +3,7 @@
 using System;
 using UnityEngine;
 
-namespace UI {
+namespace BubbleShooter.UI {
     public class UiCommand : MonoBehaviour {
         public event Action<UiCommand>? Executed;
 

@@ -3,7 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace UI.Dialog {
+namespace BubbleShooter.UI.Dialog {
     public sealed class DialogButton : MonoBehaviour {
         [SerializeField]
         private Button button;

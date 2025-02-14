@@ -1,13 +1,13 @@
 ﻿#nullable enable
 
-using Levels;
+using BubbleShooter.Levels;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace Field {
+namespace BubbleShooter.Field {
     public sealed class Field : MonoBehaviour {
         [SerializeField]
         private FieldCell? cellPrefab;
@@ -61,7 +61,7 @@ namespace Field {
             this.objectFactory = objectFactory;
         }
 
-        public void Restart(IEnumerable<LevelItem> items, IReadOnlyList<Color> colors) {
+        public void StartNew(IEnumerable<LevelItem> items, IReadOnlyList<Color> colors) {
             this.cells ??= new FieldCell?[this.maxSize.y, this.maxSize.x];
 
             for (int y = 0; y < this.maxSize.y; y++) {

@@ -1,10 +1,10 @@
 #nullable enable
 
-using UI.Dialog;
+using BubbleShooter.UI.Dialog;
 using UnityEditor;
 using UnityEngine;
 
-namespace UI.Pages {
+namespace BubbleShooter.UI.Pages {
     public class MenuPage : UiPage {
         [SerializeField]
         private UiCommand newGameCommand = null!;

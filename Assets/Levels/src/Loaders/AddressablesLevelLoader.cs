@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 
-namespace Levels {
+namespace BubbleShooter.Levels {
     public class AddressablesLevelLoader : ILevelLoader {
         private readonly object[] keys;
         private readonly List<LevelInfo> levels = new();

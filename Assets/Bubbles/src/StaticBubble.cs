@@ -1,10 +1,10 @@
 ﻿#nullable enable
 
-using Field;
+using BubbleShooter.Field;
 using System;
 using UnityEngine;
 
-namespace Bubbles {
+namespace BubbleShooter.Bubbles {
     [RequireComponent(typeof(Bubble))]
     public class StaticBubble : MonoBehaviour, IFieldObject {
         private Bubble bubble = null!;

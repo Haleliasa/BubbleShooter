@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Bubbles {
+namespace BubbleShooter.Bubbles {
     [CreateAssetMenu(
         fileName = nameof(ProjectileConfig),
         menuName = nameof(ProjectileConfig))]

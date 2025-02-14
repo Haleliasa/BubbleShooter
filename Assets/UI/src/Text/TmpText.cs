@@ -3,7 +3,7 @@
 using TMPro;
 using UnityEngine;
 
-namespace UI.Text {
+namespace BubbleShooter.UI.Text {
     public class TmpText : UiText {
         [SerializeField]
         private TMP_Text text = null!;

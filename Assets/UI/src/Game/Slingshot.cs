@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-namespace UI.Game {
+namespace BubbleShooter.UI.Game {
     public class Slingshot : MonoBehaviour, IDragHandler, IEndDragHandler {
         [SerializeField]
         private RectTransform container;

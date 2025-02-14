@@ -1,11 +1,12 @@
 #nullable enable
 
+using BubbleShooter.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace Bubbles {
+namespace BubbleShooter.Bubbles {
     public class Projectile : MonoBehaviour {
         [SerializeField]
         private ProjectileConfig config = null!;

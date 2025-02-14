@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Field {
+namespace BubbleShooter.Field {
     public sealed class FieldCell : MonoBehaviour, IFieldCell {
         private Field field;
 

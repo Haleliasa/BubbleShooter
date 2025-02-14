@@ -1,4 +1,4 @@
-﻿namespace Field {
+﻿namespace BubbleShooter.Field {
     public interface IFieldCellFactory {
         FieldCell Create();
 

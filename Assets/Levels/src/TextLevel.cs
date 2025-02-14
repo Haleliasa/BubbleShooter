@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Levels {
+namespace BubbleShooter.Levels {
     public static class TextLevel {
         public static LevelData? Parse(string text) {
             return Parse(text.Split(

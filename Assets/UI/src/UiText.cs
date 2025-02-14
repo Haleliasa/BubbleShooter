@@ -2,7 +2,7 @@
 
 using UnityEngine;
 
-namespace UI {
+namespace BubbleShooter.UI {
     public class UiText : MonoBehaviour {
         public virtual string Text { get; set; } = "";
     }

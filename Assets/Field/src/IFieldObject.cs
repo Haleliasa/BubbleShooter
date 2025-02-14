@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Field {
+namespace BubbleShooter.Field {
     public interface IFieldObject {
         void Init(Transform position);
 

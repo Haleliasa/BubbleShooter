@@ -1,6 +1,6 @@
-﻿using Field;
+﻿using BubbleShooter.Field;
 
-namespace Bubbles {
+namespace BubbleShooter.Bubbles {
     public static class BubbleUtils {
         public static void Destroy(this Bubble bubble, FieldObjectDestroyType type) {
             switch (type) {

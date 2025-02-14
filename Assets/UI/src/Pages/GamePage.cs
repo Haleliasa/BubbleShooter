@@ -1,9 +1,9 @@
 ﻿#nullable enable
 
-using UI.Dialog;
+using BubbleShooter.UI.Dialog;
 using UnityEngine;
 
-namespace UI.Pages {
+namespace BubbleShooter.UI.Pages {
     public class GamePage : UiPage {
         [SerializeField]
         private UiCommand menuCommand = null!;
@@ -21,6 +21,8 @@ namespace UI.Pages {
 
         protected override void OnOpen() {
             this.Subscribe();
+
+            this.gameController.StartGame();
         }
 
         protected override void OnClose() {

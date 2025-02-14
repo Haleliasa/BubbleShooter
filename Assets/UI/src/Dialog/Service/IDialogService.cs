@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace UI.Dialog {
+namespace BubbleShooter.UI.Dialog {
     public interface IDialogService {
         Dialog Open(
             string title,

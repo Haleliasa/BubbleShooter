@@ -3,11 +3,8 @@
 using System;
 using UnityEngine;
 
-namespace UI {
+namespace BubbleShooter.UI {
     public class UiController : MonoBehaviour, IUiController {
-        [SerializeField]
-        private string startPage = null!;
-
         private UiPage[] pages = null!;
 
         private ILogger logger = null!;
@@ -27,8 +24,6 @@ namespace UI {
             }
 
             this.logger = logger;
-
-            this.GoTo(this.startPage);
         }
 
         public void GoTo(string uiPage) {

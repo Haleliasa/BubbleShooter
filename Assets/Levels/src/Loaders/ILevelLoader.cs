@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Levels {
+namespace BubbleShooter.Levels {
     public interface ILevelLoader {
         Task<IReadOnlyList<LevelInfo>> LoadLevels();
 

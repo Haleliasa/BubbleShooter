@@ -1,4 +1,4 @@
-﻿namespace UI.Dialog {
+﻿namespace BubbleShooter.UI.Dialog {
     public readonly struct DialogOption<T> {
         public DialogOption(string text, T value) {
             this.text = text;

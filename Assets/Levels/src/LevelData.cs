@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Levels {
+namespace BubbleShooter.Levels {
     public readonly struct LevelData {
         public LevelData(IEnumerable<LevelItem> items, int shotCount) {
             this.items = items;

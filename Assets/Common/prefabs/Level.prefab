@@ -424,7 +424,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8663410715193032365, guid: 1b102e130f002fa4e95f22361100be57, type: 3}
       propertyPath: m_Name
-      value: BubbleShooter
+      value: ProjectileBubbleShooter
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

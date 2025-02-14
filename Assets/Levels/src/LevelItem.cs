@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Levels {
+namespace BubbleShooter.Levels {
     public readonly struct LevelItem {
         public LevelItem(Vector2Int coords, int colorIndex) {
             this.coords = coords;

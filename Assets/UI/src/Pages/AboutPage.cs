@@ -2,7 +2,7 @@
 
 using UnityEngine;
 
-namespace UI.Pages {
+namespace BubbleShooter.UI.Pages {
     public class AboutPage : UiPage {
         [SerializeField]
         private UiCommand socialCommand = null!;

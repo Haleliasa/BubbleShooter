@@ -1,4 +1,4 @@
-﻿namespace Levels {
+﻿namespace BubbleShooter.Levels {
     public readonly struct LevelInfo {
         public readonly int index;
         public readonly string name;

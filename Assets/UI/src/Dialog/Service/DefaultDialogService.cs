@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace UI.Dialog {
+namespace BubbleShooter.UI.Dialog {
     public class DefaultDialogService : IDialogService {
         private readonly Dialog dialogPrefab;
         private readonly DialogButton dialogButtonPrefab;

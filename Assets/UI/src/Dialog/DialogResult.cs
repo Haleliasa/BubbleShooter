@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace UI.Dialog {
+namespace BubbleShooter.UI.Dialog {
     public readonly struct DialogResult<T> {
         public readonly Dialog dialog;
         public readonly Task<T> result;
