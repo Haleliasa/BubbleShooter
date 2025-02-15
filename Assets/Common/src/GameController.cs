@@ -6,6 +6,7 @@ using BubbleShooter.Levels;
 using BubbleShooter.UI;
 using BubbleShooter.UI.Dialog;
 using BubbleShooter.UI.Pages;
+using GoogleMobileAds.Api;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -45,6 +46,8 @@ namespace BubbleShooter {
             this.projectilePool = projectilePool;
             this.uiController = uiController;
             this.dialogService = dialogService;
+
+            this.config.RewardedAdPool.PreloadAds(1).FireAndForget();
         }
 
         public void StartGame() {
@@ -149,10 +152,13 @@ namespace BubbleShooter {
                 : this.config.LoseDialogDelay
             );
 
+            RewardedAd? ad = null;
+            bool canGetExtraPoints = win && this.config.RewardedAdPool.TryGetAd(out ad);
+
             Task<GameOverOption> dialogResTask = this.dialogService.OpenAsync(
                 "Game finished",
                 win ? "You win!" : "You lost :(",
-                Options(win)
+                Options(canGetExtraPoints)
             ).result;
 
             yield return new WaitUntil(() => dialogResTask.IsCompleted);
@@ -164,7 +170,7 @@ namespace BubbleShooter {
                     break;
 
                 case GameOverOption.PointsForAd:
-                    // TODO: show ad and give extra points
+                    ad?.Show(reward => this.SetScore((int)(this.score * reward.Amount)));
 
                     break;
 
@@ -174,13 +180,15 @@ namespace BubbleShooter {
                     break;
             }
 
-            static IEnumerable<DialogOption<GameOverOption>> Options(bool win) {
+            ad?.Destroy();
+
+            static IEnumerable<DialogOption<GameOverOption>> Options(bool canGetExtraPoints) {
                 yield return new DialogOption<GameOverOption>(
                     "Play again",
                     GameOverOption.PlayAgain
                 );
 
-                if (win) {
+                if (canGetExtraPoints) {
                     yield return new DialogOption<GameOverOption>(
                         "Get extra points",
                         GameOverOption.PointsForAd

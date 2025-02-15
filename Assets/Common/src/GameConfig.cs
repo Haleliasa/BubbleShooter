@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using BubbleShooter.Ads;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace BubbleShooter {
@@ -28,6 +29,9 @@ namespace BubbleShooter {
         [SerializeField]
         private float loseDialogDelay;
 
+        [SerializeField]
+        private RewardedAdPool rewardedAdPool = null!;
+
         public IReadOnlyList<Color> Colors => this.colors;
 
         public int MatchPoints => this.matchPoints;
@@ -37,5 +41,7 @@ namespace BubbleShooter {
         public float WinDialogDelay => this.winDialogDelay;
 
         public float LoseDialogDelay => this.loseDialogDelay;
+
+        public RewardedAdPool RewardedAdPool => this.rewardedAdPool;
     }
 }
