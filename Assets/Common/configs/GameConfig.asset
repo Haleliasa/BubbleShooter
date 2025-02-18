@@ -27,4 +27,4 @@ MonoBehaviour:
   isolatedPoints: 2
   winDialogDelay: 2
   loseDialogDelay: 1
-  rewardedAdPool: {fileID: 11400000, guid: 4c44dcf1cb3926e4db74410f0c35a0f2, type: 2}
+  extraPointsAdPool: {fileID: 11400000, guid: 4c44dcf1cb3926e4db74410f0c35a0f2, type: 2}

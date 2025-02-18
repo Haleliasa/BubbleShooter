@@ -1,5 +1,6 @@
 ﻿#nullable enable
 
+using BubbleShooter.Ads;
 using BubbleShooter.Bubbles;
 using BubbleShooter.Core;
 using BubbleShooter.Levels;
@@ -16,30 +17,40 @@ using UnityEditor;
 using UnityEngine;
 
 namespace BubbleShooter {
-    public class GameController : MonoBehaviour, IGameController {
-        [SerializeField]
+    public sealed class GameController : MonoBehaviour, IGameController {
         private GameConfig config = null!;
-
         private Field.Field field = null!;
         private ProjectileBubbleShooter shooter = null!;
         private ILevelLoader levelLoader = null!;
         private IObjectPool<ProjectileBubble>? projectilePool;
         private IUiController uiController = null!;
         private IDialogService dialogService = null!;
+
+        private RewardedAdPool extraPointsAdPool = null!;
+
         private LevelData? currentLevel;
         private int score;
-        private bool subbed = false;
 
         public event Action<int>? ScoreChanged;
 
+        private void OnDestroy() {
+            this.extraPointsAdPool.Clear();
+
+            this.Unsubscribe();
+        }
+
         public void Init(
+            GameConfig config,
+            AdsConfig adsConfig,
             Field.Field field,
             ProjectileBubbleShooter shooter,
             ILevelLoader levelLoader,
             IObjectPool<ProjectileBubble> projectilePool,
             IUiController uiController,
-            IDialogService dialogService
+            IDialogService dialogService,
+            ILogger logger
         ) {
+            this.config = config;
             this.field = field;
             this.shooter = shooter;
             this.levelLoader = levelLoader;
@@ -47,7 +58,13 @@ namespace BubbleShooter {
             this.uiController = uiController;
             this.dialogService = dialogService;
 
-            this.config.RewardedAdPool.PreloadAds(1).FireAndForget();
+            this.extraPointsAdPool = new RewardedAdPool(
+                adsConfig.ExtraPointsAdUnitId,
+                preloadCount: 1,
+                logger: logger
+            );
+
+            this.Subscribe();
         }
 
         public void StartGame() {
@@ -78,11 +95,6 @@ namespace BubbleShooter {
             this.shooter.Prepare();
 
             this.SetScore(0);
-
-            if (!this.subbed) {
-                this.Subscribe();
-                this.subbed = true;
-            }
         }
 
         private async Task<LevelData?> LoadRandomLevel() {
@@ -96,18 +108,6 @@ namespace BubbleShooter {
             LevelData? level = await this.levelLoader.LoadLevel(levelInfo.index);
 
             return level;
-        }
-
-        private void OnEnable() {
-            if (this.subbed) {
-                this.Subscribe();
-            }
-        }
-
-        private void OnDisable() {
-            if (this.subbed) {
-                this.Unsubscribe();
-            }
         }
 
         private void OnFieldHit(Field.Field.HitData data) {
@@ -142,45 +142,60 @@ namespace BubbleShooter {
         }
 
         private void ProcessGameFinished(bool win) {
-            this.StartCoroutine(this.GameFinishedRoutine(win));
-        }
+            this.StartCoroutine(ProcessDialogAfterDelay(this, win));
 
-        private IEnumerator GameFinishedRoutine(bool win) {
-            yield return new WaitForSeconds(
-                win
-                ? this.config.WinDialogDelay
-                : this.config.LoseDialogDelay
-            );
+            static IEnumerator ProcessDialogAfterDelay(GameController controller, bool win) {
+                yield return new WaitForSeconds(
+                    win
+                    ? controller.config.WinDialogDelay
+                    : controller.config.LoseDialogDelay
+                );
 
-            RewardedAd? ad = null;
-            bool canGetExtraPoints = win && this.config.RewardedAdPool.TryGetAd(out ad);
-
-            Task<GameOverOption> dialogResTask = this.dialogService.OpenAsync(
-                "Game finished",
-                win ? "You win!" : "You lost :(",
-                Options(canGetExtraPoints)
-            ).result;
-
-            yield return new WaitUntil(() => dialogResTask.IsCompleted);
-
-            switch (dialogResTask.Result) {
-                case GameOverOption.PlayAgain:
-                    this.StartGameInternal(level: win ? null : this.currentLevel).FireAndForget();
-
-                    break;
-
-                case GameOverOption.PointsForAd:
-                    ad?.Show(reward => this.SetScore((int)(this.score * reward.Amount)));
-
-                    break;
-
-                case GameOverOption.GoMenu:
-                    this.GoMenu();
-
-                    break;
+                ProcessDialog(controller, win).FireAndForget();
             }
 
-            ad?.Destroy();
+            static async Task ProcessDialog(
+                GameController controller,
+                bool win,
+                bool hideExtraPoints = false
+            ) {
+                RewardedAd? ad = null;
+                bool canGetExtraPoints =
+                    win
+                    && !hideExtraPoints
+                    && controller.extraPointsAdPool.TryGetAd(out ad);
+
+                GameOverOption dialogRes = await controller.dialogService.OpenAsync(
+                    "Game finished",
+                    win ? "You win!" : "You lost :(",
+                    Options(canGetExtraPoints)
+                ).result;
+
+                switch (dialogRes) {
+                    case GameOverOption.PlayAgain:
+                        controller.StartGameInternal(level: win ? null : controller.currentLevel).FireAndForget();
+
+                        break;
+
+                    case GameOverOption.PointsForAd:
+                        if (ad?.CanShowAd() == true) {
+                            ad.Show(reward => controller.SetScore(
+                                (int)(controller.score * reward.Amount)
+                            ));
+                        }
+                        
+                        await ProcessDialog(controller, win, hideExtraPoints: true);
+
+                        break;
+
+                    case GameOverOption.GoMenu:
+                        controller.GoMenu();
+
+                        break;
+                }
+
+                ad?.Destroy();
+            }
 
             static IEnumerable<DialogOption<GameOverOption>> Options(bool canGetExtraPoints) {
                 yield return new DialogOption<GameOverOption>(

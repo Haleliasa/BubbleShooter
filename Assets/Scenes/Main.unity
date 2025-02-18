@@ -474,6 +474,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 815470ef499c39544bd2aed1f6285757, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  gameConfig: {fileID: 11400000, guid: ebc78a3b53843f64582103c50f399d6a, type: 2}
+  adsConfig: {fileID: 11400000, guid: f56120db32647f84c8bce1bbdeadd316, type: 2}
   levelAddressablesLabels:
   - levels
 --- !u!1001 &1246282165

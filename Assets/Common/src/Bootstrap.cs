@@ -1,5 +1,6 @@
 ﻿#nullable enable
 
+using BubbleShooter.Ads;
 using BubbleShooter.Bubbles;
 using BubbleShooter.Core;
 using BubbleShooter.Field;
@@ -13,6 +14,12 @@ using UnityEngine;
 
 namespace BubbleShooter {
     public class Bootstrap : MonoBehaviour {
+        [SerializeField]
+        private GameConfig gameConfig = null!;
+
+        [SerializeField]
+        private AdsConfig adsConfig = null!;
+
         [AddressablesLabel]
         [SerializeField]
         private string[] levelAddressablesLabels = null!;
@@ -47,12 +54,15 @@ namespace BubbleShooter {
             uiController.Init(this.logger);
 
             gameController.Init(
+                this.gameConfig,
+                this.adsConfig,
                 field,
                 bubbleShooter,
                 new AddressablesLevelLoader(this.levelAddressablesLabels),
                 projectileBubblePool,
                 uiController,
-                dialogService
+                dialogService,
+                this.logger
             );
 
             MobileAds.Initialize(status => this.logger.Log(logTag, "Ads initialized", this));
