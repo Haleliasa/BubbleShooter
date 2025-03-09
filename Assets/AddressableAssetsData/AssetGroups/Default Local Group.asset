@@ -17,8 +17,8 @@ MonoBehaviour:
     m_SerializedData: []
   m_GUID: f057e0e38987241479cbf3616f7cf23a
   m_SerializeEntries:
-  - m_GUID: 6cd2d69f8ed27694f9c002a584e4de5d
-    m_Address: Assets/Levels/Levels
+  - m_GUID: 00a9b0ec2c156314caa5b215c0c7d4c9
+    m_Address: Assets/BubbleShooter/assets/Levels
     m_ReadOnly: 0
     m_SerializedLabels:
     - levels
